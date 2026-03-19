@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FinanceKite.API/FinanceKite.API.csproj" />
+    <Project Path="src/FinanceKite.Application/FinanceKite.Application.csproj" />
+    <Project Path="src/FinanceKite.Domain/FinanceKite.Domain.csproj" />
+    <Project Path="src/FinanceKite.Infrastructure/FinanceKite.Infrastructure.csproj" />
+  </Folder>
+</Solution>
