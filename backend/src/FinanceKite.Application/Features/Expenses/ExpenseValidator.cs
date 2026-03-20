@@ -19,3 +19,19 @@ public class CreateExpenseRequestValidator : AbstractValidator<CreateExpenseRequ
             .NotEmpty().WithMessage("Expense date is required.");
     }
 }
+
+public class UpdateExpenseRequestValidator : AbstractValidator<UpdateExpenseRequest>
+{
+    public UpdateExpenseRequestValidator()
+    {
+        RuleFor(x => x.Description)
+            .NotEmpty().WithMessage("Description is required.")
+            .MaximumLength(200).WithMessage("Description cannot exceed 200 characters.");
+
+        RuleFor(x => x.Amount)
+            .GreaterThan(0).WithMessage("Expense amount must be greater than zero.");
+
+        RuleFor(x => x.Date)
+            .NotEmpty().WithMessage("Expense date is required.");
+    }
+}
