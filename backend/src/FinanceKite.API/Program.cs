@@ -37,21 +37,28 @@ builder.Services.AddCors(options =>
 
 // JWT Authentication via Supabase
 // Supabase signs its JWTs with your project's JWT secret
-var jwtSecret = builder.Configuration["Supabase:JwtSecret"]
-    ?? throw new InvalidOperationException("Supabase:JwtSecret is not configured.");
+// var jwtSecret = builder.Configuration["Supabase:JwtSecret"]
+//     ?? throw new InvalidOperationException("Supabase:JwtSecret is not configured.");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        var supabaseUrl = builder.Configuration["Supabase:Url"]
+            ?? throw new InvalidOperationException("Supabase:Url is not configured.");
+
+        options.Authority = $"{supabaseUrl}/auth/v1";
+        options.MetadataAddress = $"{supabaseUrl}/auth/v1/.well-known/openid-configuration";
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
-            ValidateIssuer = false,   // Supabase free tier — issuer varies, skip validation
-            ValidateAudience = false, // Same reason
+            ValidateIssuer = false,
+            ValidateAudience = false,
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero // No tolerance for expired tokens
+            ClockSkew = TimeSpan.Zero
         };
+
+        options.RequireHttpsMetadata = false;
     });
 
 builder.Services.AddAuthorization();
