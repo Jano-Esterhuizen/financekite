@@ -46,6 +46,13 @@ public class BusinessesController(BusinessService businessService) : BaseControl
         await businessService.DeleteAsync(id, CurrentUserId, cancellationToken);
         return NoContent();
     }
+
+    [HttpGet("{id:guid}/summary")]
+    public async Task<IActionResult> GetFinancialSummary(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await businessService.GetFinancialSummaryAsync(id, CurrentUserId, cancellationToken);
+        return Ok(result);
+    }
 }
 
 /*

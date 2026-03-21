@@ -4,6 +4,7 @@ namespace FinanceKite.Application.Features.Businesses;
 
 using FinanceKite.Application.Common.Exceptions;
 using FinanceKite.Application.Common.Interfaces;
+using FinanceKite.Application.Common.Models;
 using FinanceKite.Domain.Entities;
 using FluentValidation;
 
@@ -115,4 +116,18 @@ public class BusinessService(
             throw new Common.Exceptions.ValidationException(errors);
         }
     }
+
+    public async Task<FinancialSummary> GetFinancialSummaryAsync(
+    Guid businessId,
+    Guid userId,
+    CancellationToken cancellationToken = default)
+{
+    var business = await businessRepository.GetByIdAsync(businessId, cancellationToken)
+        ?? throw new NotFoundException(nameof(Business), businessId);
+
+    if (business.UserId != userId)
+        throw new UnauthorizedAccessException();
+
+    return await businessRepository.GetFinancialSummaryAsync(businessId, cancellationToken);
+}
 }

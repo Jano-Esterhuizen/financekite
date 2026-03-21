@@ -2,6 +2,7 @@ using System;
 
 namespace FinanceKite.Application.Common.Interfaces;
 
+using FinanceKite.Application.Common.Models;
 using FinanceKite.Domain.Entities;
 
 public interface IBusinessRepository
@@ -12,4 +13,5 @@ public interface IBusinessRepository
     Task UpdateAsync(Business business, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
     Task<bool> ExistsAsync(Guid id, Guid userId, CancellationToken cancellationToken = default);
+    Task<FinancialSummary> GetFinancialSummaryAsync(Guid businessId, CancellationToken cancellationToken = default);
 }

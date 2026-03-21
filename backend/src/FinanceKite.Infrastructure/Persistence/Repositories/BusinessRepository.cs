@@ -3,6 +3,7 @@ using System;
 namespace FinanceKite.Infrastructure.Persistence.Repositories;
 
 using FinanceKite.Application.Common.Interfaces;
+using FinanceKite.Application.Common.Models;
 using FinanceKite.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -41,7 +42,50 @@ public class BusinessRepository(ApplicationDbContext context) : IBusinessReposit
     public async Task<bool> ExistsAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
         => await context.Businesses
             .AnyAsync(b => b.Id == id && b.UserId == userId, cancellationToken);
+
+    public async Task<FinancialSummary> GetFinancialSummaryAsync(
+    Guid businessId,
+    CancellationToken cancellationToken = default)
+    {
+        // All three aggregations run as separate efficient SQL SUM queries
+        // None of these load records into memory — EF Core translates them to SQL
+
+        var totalPaid = await context.Invoices
+            .Where(i => i.BusinessId == businessId && i.Status == InvoiceStatus.Paid)
+            .SumAsync(i => i.Amount, cancellationToken);
+
+        var totalOutstanding = await context.Invoices
+            .Where(i => i.BusinessId == businessId &&
+                        (i.Status == InvoiceStatus.Pending ||
+                         i.Status == InvoiceStatus.Overdue))
+            .SumAsync(i => i.Amount, cancellationToken);
+
+        var totalExpenses = await context.Expenses
+            .Where(e => e.BusinessId == businessId)
+            .SumAsync(e => e.Amount, cancellationToken);
+
+        return new FinancialSummary
+        {
+            TotalPaid = totalPaid,
+            TotalOutstanding = totalOutstanding,
+            TotalExpenses = totalExpenses
+        };
+
+        /*
+        📘 Why three separate queries instead of one? Each aggregation filters on different conditions
+        combining them into one query would require complex SQL that's harder to read and maintain. 
+        Three simple SUM queries are each translated to a single SQL statement, run in milliseconds, and are perfectly readable. 
+        Don't over-optimize until you have a reason to.
+
+        📘 Why SumAsync instead of loading records? SumAsync tells EF Core to push the SUM() calculation to the database. 
+        The database returns a single decimal number. 
+        If we did invoices.ToListAsync() first and then .Sum(), we'd load potentially thousands of records into memory 
+        just to add up their amounts, very wasteful.
+        */
+    }
 }
+
+
 
 /*
 📘 Why does UpdateAsync return Task.CompletedTask? 
