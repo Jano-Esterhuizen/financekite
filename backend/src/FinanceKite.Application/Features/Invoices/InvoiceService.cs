@@ -108,20 +108,41 @@ public class InvoiceService(
     }
 
     public async Task<InvoiceResponse> UploadDocumentAsync(
-        Guid id,
-        Guid businessId,
-        Guid userId,
-        IFormFile file,
-        CancellationToken cancellationToken = default)
+    Guid id,
+    Guid businessId,
+    Guid userId,
+    IFormFile file,
+    CancellationToken cancellationToken = default)
     {
         await VerifyBusinessOwnershipAsync(businessId, userId, cancellationToken);
 
         var invoice = await invoiceRepository.GetByIdAsync(id, businessId, cancellationToken)
             ?? throw new NotFoundException(nameof(Invoice), id);
 
-        // Delete old document from storage if one exists
+        // Validate file type — only PDFs allowed for invoices
+        if (!file.ContentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase))
+            throw new Common.Exceptions.ValidationException(
+                new Dictionary<string, string[]>
+                {
+                { "file", ["Only PDF files are allowed for invoice documents."] }
+                });
+
+        // Validate file size — max 10MB
+        // We also have a limit that we set in supabase storage, but validating here allows us to return a friendly error message rather than just failing on the storage upload.
+        if (file.Length > 0.25 * 1024 * 1024)
+            throw new Common.Exceptions.ValidationException(
+                new Dictionary<string, string[]>
+                {
+                { "file", ["File size cannot exceed 250KB."] }
+                });
+
+        // Prevent overwriting — user must delete existing document first
         if (!string.IsNullOrEmpty(invoice.DocumentUrl))
-            await storageService.DeleteFileAsync(invoice.DocumentUrl, cancellationToken);
+            throw new Common.Exceptions.ValidationException(
+                new Dictionary<string, string[]>
+                {
+            { "file", ["An invoice document already exists. Please delete it before uploading a new one."] }
+                });
 
         using var stream = file.OpenReadStream();
         invoice.DocumentUrl = await storageService.UploadFileAsync(
@@ -180,6 +201,49 @@ public class InvoiceService(
                     g => g.Select(e => e.ErrorMessage).ToArray());
             throw new Common.Exceptions.ValidationException(errors);
         }
+    }
+
+    public async Task<string> GetDocumentUrlAsync(
+    Guid id,
+    Guid businessId,
+    Guid userId,
+    CancellationToken cancellationToken = default)
+    {
+        await VerifyBusinessOwnershipAsync(businessId, userId, cancellationToken);
+
+        var invoice = await invoiceRepository.GetByIdAsync(id, businessId, cancellationToken)
+            ?? throw new NotFoundException(nameof(Invoice), id);
+
+        if (string.IsNullOrEmpty(invoice.DocumentUrl))
+            throw new NotFoundException("Document", id);
+
+        return await storageService.GetSignedUrlAsync(
+            invoice.DocumentUrl,
+            expiresInSeconds: 3600,
+            cancellationToken);
+    }
+
+    public async Task DeleteDocumentAsync(
+    Guid id,
+    Guid businessId,
+    Guid userId,
+    CancellationToken cancellationToken = default)
+    {
+        await VerifyBusinessOwnershipAsync(businessId, userId, cancellationToken);
+
+        var invoice = await invoiceRepository.GetByIdAsync(id, businessId, cancellationToken)
+            ?? throw new NotFoundException(nameof(Invoice), id);
+
+        if (string.IsNullOrEmpty(invoice.DocumentUrl))
+            throw new NotFoundException("Document", id);
+
+        await storageService.DeleteFileAsync(invoice.DocumentUrl, cancellationToken);
+
+        invoice.DocumentUrl = null;
+        invoice.UpdatedAt = DateTime.UtcNow;
+
+        await invoiceRepository.UpdateAsync(invoice, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }
 

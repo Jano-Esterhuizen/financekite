@@ -11,5 +11,10 @@ public interface IStorageService
         string folder,
         CancellationToken cancellationToken = default);
 
-    Task DeleteFileAsync(string fileUrl, CancellationToken cancellationToken = default);
+    Task DeleteFileAsync(string filePath, CancellationToken cancellationToken = default);
+
+    Task<string> GetSignedUrlAsync(
+        string filePath,
+        int expiresInSeconds = 3600,
+        CancellationToken cancellationToken = default);
 }

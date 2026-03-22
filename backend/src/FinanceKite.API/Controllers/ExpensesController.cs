@@ -60,4 +60,27 @@ public class ExpensesController(ExpenseService expenseService) : BaseController
         await expenseService.DeleteAsync(id, businessId, CurrentUserId, cancellationToken);
         return NoContent();
     }
+
+    [HttpGet("{id:guid}/proof-url")]
+    public async Task<IActionResult> GetProofUrl(
+    Guid businessId,
+    Guid id,
+    [FromQuery] bool download = false,
+    CancellationToken cancellationToken = default)
+    {
+        var url = await expenseService.GetProofOfPaymentUrlAsync(
+            id, businessId, CurrentUserId, cancellationToken);
+
+        return Ok(new { url, download });
+    }
+
+    [HttpDelete("{id:guid}/proof")]
+    public async Task<IActionResult> DeleteProof(
+    Guid businessId,
+    Guid id,
+    CancellationToken cancellationToken)
+    {
+        await expenseService.DeleteProofOfPaymentAsync(id, businessId, CurrentUserId, cancellationToken);
+        return NoContent();
+    }
 }

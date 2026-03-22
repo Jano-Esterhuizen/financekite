@@ -96,19 +96,41 @@ public class ExpenseService(
     }
 
     public async Task<ExpenseResponse> UploadProofOfPaymentAsync(
-        Guid id,
-        Guid businessId,
-        Guid userId,
-        IFormFile file,
-        CancellationToken cancellationToken = default)
+    Guid id,
+    Guid businessId,
+    Guid userId,
+    IFormFile file,
+    CancellationToken cancellationToken = default)
     {
         await VerifyBusinessOwnershipAsync(businessId, userId, cancellationToken);
 
         var expense = await expenseRepository.GetByIdAsync(id, businessId, cancellationToken)
             ?? throw new NotFoundException(nameof(Expense), id);
 
+        // Validate file type — PDFs and images allowed for proof of payment
+        var allowedTypes = new[] { "application/pdf", "image/jpeg", "image/png" };
+        if (!allowedTypes.Contains(file.ContentType.ToLower()))
+            throw new Common.Exceptions.ValidationException(
+                new Dictionary<string, string[]>
+                {
+                { "file", ["Only PDF, JPEG, and PNG files are allowed for proof of payment."] }
+                });
+
+        // Validate file size — max 10MB
+        if (file.Length > 10 * 1024 * 1024)
+            throw new Common.Exceptions.ValidationException(
+                new Dictionary<string, string[]>
+                {
+                { "file", ["File size cannot exceed 10MB."] }
+                });
+
+        // Prevent overwriting — user must delete existing proof first
         if (!string.IsNullOrEmpty(expense.ProofOfPaymentUrl))
-            await storageService.DeleteFileAsync(expense.ProofOfPaymentUrl, cancellationToken);
+            throw new Common.Exceptions.ValidationException(
+                new Dictionary<string, string[]>
+                {
+            { "file", ["A proof of payment already exists. Please delete it before uploading a new one."] }
+                });
 
         using var stream = file.OpenReadStream();
         expense.ProofOfPaymentUrl = await storageService.UploadFileAsync(
@@ -167,4 +189,47 @@ public class ExpenseService(
             throw new Common.Exceptions.ValidationException(errors);
         }
     }
+
+    public async Task<string> GetProofOfPaymentUrlAsync(
+    Guid id,
+    Guid businessId,
+    Guid userId,
+    CancellationToken cancellationToken = default)
+    {
+        await VerifyBusinessOwnershipAsync(businessId, userId, cancellationToken);
+
+        var expense = await expenseRepository.GetByIdAsync(id, businessId, cancellationToken)
+            ?? throw new NotFoundException(nameof(Expense), id);
+
+        if (string.IsNullOrEmpty(expense.ProofOfPaymentUrl))
+            throw new NotFoundException("Proof of payment", id);
+
+        return await storageService.GetSignedUrlAsync(
+            expense.ProofOfPaymentUrl,
+            expiresInSeconds: 3600,
+            cancellationToken);
+    }
+
+    public async Task DeleteProofOfPaymentAsync(
+    Guid id,
+    Guid businessId,
+    Guid userId,
+    CancellationToken cancellationToken = default)
+{
+    await VerifyBusinessOwnershipAsync(businessId, userId, cancellationToken);
+
+    var expense = await expenseRepository.GetByIdAsync(id, businessId, cancellationToken)
+        ?? throw new NotFoundException(nameof(Expense), id);
+
+    if (string.IsNullOrEmpty(expense.ProofOfPaymentUrl))
+        throw new NotFoundException("Proof of payment", id);
+
+    await storageService.DeleteFileAsync(expense.ProofOfPaymentUrl, cancellationToken);
+
+    expense.ProofOfPaymentUrl = null;
+    expense.UpdatedAt = DateTime.UtcNow;
+
+    await expenseRepository.UpdateAsync(expense, cancellationToken);
+    await unitOfWork.SaveChangesAsync(cancellationToken);
+}
 }

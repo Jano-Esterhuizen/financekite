@@ -67,4 +67,27 @@ public class InvoicesController(InvoiceService invoiceService) : BaseController
         await invoiceService.DeleteAsync(id, businessId, CurrentUserId, cancellationToken);
         return NoContent();
     }
+
+    [HttpGet("{id:guid}/document-url")]
+    public async Task<IActionResult> GetDocumentUrl(
+    Guid businessId,
+    Guid id,
+    [FromQuery] bool download = false,
+    CancellationToken cancellationToken = default)
+    {
+        var url = await invoiceService.GetDocumentUrlAsync(
+            id, businessId, CurrentUserId, cancellationToken);
+
+        return Ok(new { url, download });
+    }
+
+    [HttpDelete("{id:guid}/document")]
+    public async Task<IActionResult> DeleteDocument(
+    Guid businessId,
+    Guid id,
+    CancellationToken cancellationToken)
+    {
+        await invoiceService.DeleteDocumentAsync(id, businessId, CurrentUserId, cancellationToken);
+        return NoContent();
+    }
 }
