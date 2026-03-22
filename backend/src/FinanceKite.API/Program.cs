@@ -13,9 +13,18 @@ var builder = WebApplication.CreateBuilder(args);
 // Application & Infrastructure layers
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddHostedService<FinanceKite.API.BackgroundServices.FinancialSchedulerService>();
 
 // Controllers
 builder.Services.AddControllers();
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Serialize enums as strings instead of integers
+        options.JsonSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 
 // Swagger/OpenAPI for testing endpoints
 builder.Services.AddEndpointsApiExplorer();

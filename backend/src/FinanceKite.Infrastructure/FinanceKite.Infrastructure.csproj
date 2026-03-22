@@ -8,10 +8,15 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.5" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <PackageReference Include="Resend" Version="0.2.2" />
     <PackageReference Include="Supabase" Version="1.1.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FinanceKite.Application\FinanceKite.Application.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Email\" />
   </ItemGroup>
 </Project>

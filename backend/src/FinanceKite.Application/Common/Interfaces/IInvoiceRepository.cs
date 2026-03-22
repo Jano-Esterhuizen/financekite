@@ -13,4 +13,5 @@ public interface IInvoiceRepository
     Task<Invoice> CreateAsync(Invoice invoice, CancellationToken cancellationToken = default);
     Task UpdateAsync(Invoice invoice, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid id, Guid businessId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Invoice>> GetPendingOverdueAsync(CancellationToken cancellationToken = default);
 }

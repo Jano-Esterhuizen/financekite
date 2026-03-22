@@ -3,13 +3,16 @@ using System;
 namespace FinanceKite.Infrastructure;
 
 using FinanceKite.Application.Common.Interfaces;
+using FinanceKite.Infrastructure.Email;
 using FinanceKite.Infrastructure.Persistence;
 using FinanceKite.Infrastructure.Persistence.Repositories;
 using FinanceKite.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http;
 using Supabase;
+using Resend;
 
 public static class DependencyInjection
 {
@@ -33,6 +36,16 @@ public static class DependencyInjection
         services.AddScoped<IInvoiceRepository, InvoiceRepository>();
         services.AddScoped<IExpenseRepository, ExpenseRepository>();
         services.AddScoped<IRecurringPaymentRepository, RecurringPaymentRepository>();
+
+        // Resend email client
+        services.AddOptions();
+        services.AddHttpClient<ResendClient>();
+        services.Configure<ResendClientOptions>(o =>
+        {
+            o.ApiToken = configuration["Resend:ApiKey"] ?? string.Empty;
+        });
+        services.AddTransient<IResend, ResendClient>();
+        services.AddScoped<IEmailService, ResendEmailService>();
 
         // Supabase client (singleton — one instance for the app lifetime)
         services.AddSingleton(provider =>

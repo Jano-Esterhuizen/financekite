@@ -53,4 +53,19 @@ public class InvoiceRepository(ApplicationDbContext context) : IInvoiceRepositor
         if (invoice is not null)
             context.Invoices.Remove(invoice);
     }
+
+    public async Task<IReadOnlyList<Invoice>> GetPendingOverdueAsync(
+    CancellationToken cancellationToken = default)
+    {
+        var today = DateTime.UtcNow.Date;
+
+        return await context.Invoices
+            .Where(i => i.Status == InvoiceStatus.Pending && i.DueDate.Date < today)
+            .ToListAsync(cancellationToken);
+    }
+    /*
+    📘 Why no businessId filter here? Like GetDueForReminderAsync, this runs globally across all businesses
+    The scheduler checks the entire database, not one business at a time. 
+    This is one of the very few intentionally cross-tenant queries.
+    */
 }
