@@ -2,6 +2,8 @@ using System;
 
 namespace FinanceKite.Application.Features.Clients;
 
+using FinanceKite.Application.Features.Invoices;
+
 public record CreateClientRequest(
     string Name,
     string? CompanyName,
@@ -27,7 +29,8 @@ public record ClientResponse(
     string? Phone,
     string? Address,
     bool IsArchived,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    IReadOnlyList<InvoiceResponse> Invoices
 );
 
 public record ClientHealthResponse(

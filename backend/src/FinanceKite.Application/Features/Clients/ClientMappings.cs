@@ -2,6 +2,7 @@ using System;
 
 namespace FinanceKite.Application.Features.Clients;
 
+using FinanceKite.Application.Features.Invoices;
 using FinanceKite.Domain.Entities;
 
 public static class ClientMappings
@@ -16,6 +17,7 @@ public static class ClientMappings
             client.Phone,
             client.Address,
             client.IsArchived,
-            client.CreatedAt
+            client.CreatedAt,
+            client.Invoices.Select(i => i.ToResponse()).ToList()
         );
 }

@@ -15,6 +15,7 @@ public class ClientRepository(ApplicationDbContext context) : IClientRepository
 
     public async Task<IReadOnlyList<Client>> GetAllByBusinessIdAsync(Guid businessId, CancellationToken cancellationToken = default)
         => await context.Clients
+            .Include(c => c.Invoices)
             .Where(c => c.BusinessId == businessId)
             .OrderBy(c => c.Name)
             .ToListAsync(cancellationToken);
