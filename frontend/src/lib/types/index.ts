@@ -20,6 +20,7 @@ export interface Client {
   address: string | null
   isArchived: boolean
   createdAt: string
+  invoices?: Invoice[]
 }
 
 export interface Invoice {
