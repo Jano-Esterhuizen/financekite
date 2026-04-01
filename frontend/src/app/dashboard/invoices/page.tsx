@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Plus, Search, FileText, Eye, Upload, MoreHorizontal, Pencil, Trash2, Loader2 } from 'lucide-react'
+import { Plus, Search, FileText, Eye, Upload, MoreHorizontal, Pencil, Trash2, Loader2, X } from 'lucide-react'
 import { useBusiness } from '@/lib/contexts/BusinessContext'
 import { invoicesApi } from '@/lib/api/invoices'
 import { clientsApi } from '@/lib/api/clients'
@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { toast } from 'sonner'
 
 // ── constants ─────────────────────────────────────────────────────────────────
 
@@ -231,8 +232,10 @@ export default function InvoicesPage() {
   const [editTarget, setEditTarget] = useState<Invoice | null>(null)
   const [saving, setSaving] = useState(false)
 
-  // per-invoice upload loading state
+  // per-invoice document loading states
   const [uploadingId, setUploadingId] = useState<string | null>(null)
+  const [viewingId, setViewingId] = useState<string | null>(null)
+  const [deletingDocId, setDeletingDocId] = useState<string | null>(null)
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   // ── fetch ──
@@ -323,16 +326,53 @@ export default function InvoicesPage() {
     }
   }
 
+  const handleView = async (inv: Invoice) => {
+    if (!selectedBusiness) return
+    setViewingId(inv.id)
+    try {
+      const { url } = await invoicesApi.getDocumentUrl(selectedBusiness.id, inv.id)
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } catch (err) {
+      toast.error('Could not open document. Please try again.')
+      console.error(err)
+    } finally {
+      setViewingId(null)
+    }
+  }
+
   const handleUpload = async (inv: Invoice, file: File) => {
     if (!selectedBusiness) return
     setUploadingId(inv.id)
     try {
       const updated = await invoicesApi.uploadDocument(selectedBusiness.id, inv.id, file)
       setInvoices((prev) => prev.map((i) => i.id === updated.id ? updated : i))
-    } catch (err) {
+      toast.success('Document uploaded successfully.')
+    } catch (err: any) {
+      const msg = err?.response?.data?.errors?.file?.[0]
+        ?? err?.response?.data?.title
+        ?? 'Upload failed. Please try again.'
+      toast.error(msg)
       console.error(err)
     } finally {
       setUploadingId(null)
+    }
+  }
+
+  const handleDeleteDocument = async (inv: Invoice) => {
+    if (!selectedBusiness) return
+    if (!window.confirm(`Remove the document from invoice "${inv.invoiceNumber}"?`)) return
+    setDeletingDocId(inv.id)
+    try {
+      await invoicesApi.deleteDocument(selectedBusiness.id, inv.id)
+      setInvoices((prev) => prev.map((i) =>
+        i.id === inv.id ? { ...i, documentUrl: null } : i
+      ))
+      toast.success('Document removed.')
+    } catch (err) {
+      toast.error('Could not remove document. Please try again.')
+      console.error(err)
+    } finally {
+      setDeletingDocId(null)
     }
   }
 
@@ -457,10 +497,10 @@ export default function InvoicesPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {/* hidden file input per row */}
+                        {/* PDF-only hidden file input per row */}
                         <input
                           type="file"
-                          accept=".pdf,image/*"
+                          accept=".pdf"
                           className="hidden"
                           ref={(el) => { fileInputRefs.current[inv.id] = el }}
                           onChange={(e) => {
@@ -470,12 +510,32 @@ export default function InvoicesPage() {
                           }}
                         />
                         {inv.documentUrl ? (
-                          <Button variant="outline" size="sm" className="gap-1.5 h-7 text-xs" asChild>
-                            <a href={inv.documentUrl} target="_blank" rel="noopener noreferrer">
-                              <Eye size={13} />
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-1.5 h-7 text-xs"
+                              disabled={viewingId === inv.id}
+                              onClick={() => handleView(inv)}
+                            >
+                              {viewingId === inv.id
+                                ? <Loader2 size={13} className="animate-spin" />
+                                : <Eye size={13} />}
                               View
-                            </a>
-                          </Button>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              disabled={deletingDocId === inv.id}
+                              onClick={() => handleDeleteDocument(inv)}
+                              title="Remove document"
+                            >
+                              {deletingDocId === inv.id
+                                ? <Loader2 size={13} className="animate-spin" />
+                                : <X size={13} />}
+                            </Button>
+                          </div>
                         ) : (
                           <Button
                             variant="ghost"
@@ -489,7 +549,7 @@ export default function InvoicesPage() {
                             ) : (
                               <Upload size={13} />
                             )}
-                            {uploadingId === inv.id ? 'Uploading…' : 'Upload'}
+                            {uploadingId === inv.id ? 'Uploading…' : 'Upload PDF'}
                           </Button>
                         )}
                       </TableCell>
