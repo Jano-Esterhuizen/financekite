@@ -52,7 +52,7 @@ export default function AppSidebar() {
   }
 
   return (
-    <aside className="flex flex-col w-64 min-h-screen bg-card border-r border-border px-4 py-6 flex-shrink-0">
+    <aside className="flex flex-col w-64 h-screen bg-card border-r border-border px-4 py-6 flex-shrink-0">
       {/* Brand */}
       <div className="flex items-center gap-2 mb-6 px-2">
         <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">

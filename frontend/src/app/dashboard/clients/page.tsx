@@ -205,7 +205,7 @@ export default function ClientsPage() {
   }
 
   return (
-    <div className="flex flex-col flex-1 overflow-auto">
+    <div className="flex flex-col flex-1 overflow-hidden">
       {/* Header */}
       <header className="flex items-center justify-between px-8 py-4 border-b border-border bg-card flex-shrink-0">
         <div className="text-sm text-muted-foreground">
@@ -218,7 +218,7 @@ export default function ClientsPage() {
         </div>
       </header>
 
-      <div className="p-8 space-y-6">
+      <div className="flex-1 overflow-auto p-8 space-y-6">
         {/* Page heading */}
         <div className="flex items-center justify-between">
           <div>

@@ -129,7 +129,7 @@ export default function DashboardPage() {
     : []
 
   return (
-    <div className="flex flex-col flex-1 overflow-auto">
+    <div className="flex flex-col flex-1 overflow-hidden">
       {/* Top bar */}
       <header className="flex items-center justify-between px-8 py-4 border-b border-border bg-card flex-shrink-0">
         <div className="text-sm text-muted-foreground">
@@ -145,7 +145,7 @@ export default function DashboardPage() {
       </header>
 
       {/* Content */}
-      <div className="p-8 space-y-6">
+      <div className="flex-1 overflow-auto p-8 space-y-6">
         {/* Metric cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {loading || !summary

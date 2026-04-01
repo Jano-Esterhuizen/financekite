@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import {
   ResponsiveContainer,
   AreaChart,
@@ -9,8 +10,9 @@ import {
   CartesianGrid,
   Tooltip,
 } from 'recharts'
-import { MoreHorizontal } from 'lucide-react'
 import type { Invoice, Expense } from '@/lib/types'
+
+type ViewMode = 'lifetime' | '6months'
 
 interface ChartPoint {
   month: string
@@ -18,12 +20,56 @@ interface ChartPoint {
   expenses: number
 }
 
-function buildChartData(invoices: Invoice[], expenses: Expense[]): ChartPoint[] {
-  const points: ChartPoint[] = []
+function buildLifetimeData(invoices: Invoice[], expenses: Expense[]): ChartPoint[] {
+  const allDates = [
+    ...invoices.filter((inv) => inv.status === 'Paid').map((inv) => new Date(inv.issuedDate)),
+    ...expenses.map((exp) => new Date(exp.date)),
+  ]
+
+  if (allDates.length === 0) return []
+
+  const earliest = allDates.reduce((min, d) => (d < min ? d : min))
   const now = new Date()
 
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+  const start = new Date(earliest.getFullYear(), earliest.getMonth(), 1)
+  const end = new Date(now.getFullYear(), now.getMonth(), 1)
+
+  const points: ChartPoint[] = []
+  let cumulativeRevenue = 0
+  let cumulativeExpenses = 0
+  const cursor = new Date(start)
+
+  while (cursor <= end) {
+    const year = cursor.getFullYear()
+    const month = cursor.getMonth()
+    const label = cursor.toLocaleDateString('en-ZA', { month: 'short', year: '2-digit' })
+
+    cumulativeRevenue += invoices
+      .filter((inv) => {
+        if (inv.status !== 'Paid') return false
+        const d = new Date(inv.issuedDate)
+        return d.getFullYear() === year && d.getMonth() === month
+      })
+      .reduce((sum, inv) => sum + inv.amount, 0)
+
+    cumulativeExpenses += expenses
+      .filter((exp) => {
+        const d = new Date(exp.date)
+        return d.getFullYear() === year && d.getMonth() === month
+      })
+      .reduce((sum, exp) => sum + exp.amount, 0)
+
+    points.push({ month: label, revenue: cumulativeRevenue, expenses: cumulativeExpenses })
+    cursor.setMonth(cursor.getMonth() + 1)
+  }
+
+  return points
+}
+
+function build6MonthData(invoices: Invoice[], expenses: Expense[]): ChartPoint[] {
+  const now = new Date()
+  return Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
     const year = d.getFullYear()
     const month = d.getMonth()
     const label = d.toLocaleDateString('en-ZA', { month: 'short', year: '2-digit' })
@@ -43,10 +89,8 @@ function buildChartData(invoices: Invoice[], expenses: Expense[]): ChartPoint[] 
       })
       .reduce((sum, exp) => sum + exp.amount, 0)
 
-    points.push({ month: label, revenue, expenses: expenseTotal })
-  }
-
-  return points
+    return { month: label, revenue, expenses: expenseTotal }
+  })
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -73,7 +117,11 @@ interface Props {
 }
 
 export default function RevenueChart({ invoices, expenses }: Props) {
-  const data = buildChartData(invoices, expenses)
+  const [view, setView] = useState<ViewMode>('6months')
+
+  const data = view === 'lifetime'
+    ? buildLifetimeData(invoices, expenses)
+    : build6MonthData(invoices, expenses)
 
   return (
     <div className="bg-card rounded-xl p-5 shadow-sm border border-border">
@@ -89,7 +137,29 @@ export default function RevenueChart({ invoices, expenses }: Props) {
             </span>
           </div>
         </div>
-        <MoreHorizontal size={18} className="text-muted-foreground" />
+
+        <div className="flex items-center gap-1 bg-muted rounded-lg p-1 text-xs">
+          <button
+            onClick={() => setView('6months')}
+            className={`px-3 py-1 rounded-md font-medium transition-colors ${
+              view === '6months'
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            6 Months
+          </button>
+          <button
+            onClick={() => setView('lifetime')}
+            className={`px-3 py-1 rounded-md font-medium transition-colors ${
+              view === 'lifetime'
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Lifetime
+          </button>
+        </div>
       </div>
 
       <ResponsiveContainer width="100%" height={250}>
@@ -106,6 +176,7 @@ export default function RevenueChart({ invoices, expenses }: Props) {
             tick={{ fontSize: 12, fill: 'hsl(220,9%,46%)' }}
             axisLine={false}
             tickLine={false}
+            interval="preserveStartEnd"
           />
           <YAxis
             tick={{ fontSize: 12, fill: 'hsl(220,9%,46%)' }}
