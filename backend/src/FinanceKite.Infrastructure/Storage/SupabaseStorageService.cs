@@ -22,7 +22,8 @@ public class SupabaseStorageService(Client supabaseClient, IConfiguration config
         await fileStream.CopyToAsync(memoryStream, cancellationToken);
         var bytes = memoryStream.ToArray();
 
-        var filePath = $"{folder}/{Guid.NewGuid()}_{fileName}";
+        var safeFileName = fileName.Replace(' ', '_');
+        var filePath = $"{folder}/{Guid.NewGuid()}_{safeFileName}";
 
         await supabaseClient.Storage
             .From(_bucketName)
