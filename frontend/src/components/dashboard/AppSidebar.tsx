@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   LayoutDashboard,
   Users,
@@ -54,11 +55,8 @@ export default function AppSidebar() {
   return (
     <aside className="flex flex-col w-64 h-screen bg-card border-r border-border px-4 py-6 flex-shrink-0">
       {/* Brand */}
-      <div className="flex items-center gap-2 mb-6 px-2">
-        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-          <span className="text-primary-foreground font-bold text-sm">FK</span>
-        </div>
-        <span className="font-semibold text-foreground text-lg">FinanceKite</span>
+      <div className="flex items-center mb-6 px-2">
+        <Image src="/logo.png" alt="FinanceKite" width={160} height={40} className="object-contain" priority />
       </div>
 
       {/* Business picker */}
