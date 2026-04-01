@@ -27,14 +27,14 @@ const navSections = [
     label: 'Main',
     items: [
       { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-      { label: 'Clients', href: '/dashboard/clients', icon: Users },
-      { label: 'Invoices', href: '/dashboard/invoices', icon: FileText },
     ],
   },
   {
     label: 'Finance',
     items: [
       { label: 'Expenses', href: '/dashboard/expenses', icon: Receipt },
+      { label: 'Clients', href: '/dashboard/clients', icon: Users },
+      { label: 'Invoices', href: '/dashboard/invoices', icon: FileText },
       { label: 'Recurring Payments', href: '/dashboard/recurring-payments', icon: RefreshCw },
     ],
   },
