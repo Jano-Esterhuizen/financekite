@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/landing/navbar"
 import { PageLoader } from "@/components/landing/page-loader"
+import { SmoothScroll } from "@/components/landing/smooth-scroll"
 
 export default function LandingLayout({
   children,
@@ -9,6 +10,7 @@ export default function LandingLayout({
   return (
     <>
       <PageLoader />
+      <SmoothScroll />
       <Navbar />
       <main>{children}</main>
     </>
