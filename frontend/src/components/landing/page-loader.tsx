@@ -111,7 +111,7 @@ export function PageLoader() {
               {/* Kite icon — rendered as filled silhouette so the full shape is visible */}
               <motion.path
                 d={KITE_PATH}
-                fill="#0ea5e9"
+                fill="hsl(190, 52%, 36%)"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, ease: "easeOut", delay: 0 }}

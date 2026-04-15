@@ -69,10 +69,10 @@ export function Navbar() {
         {/* ── Logo ── */}
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
           <KiteLogo
-            className="text-primary"
+            className="text-brand-500"
             style={{ width: "1.4rem", height: "1.4rem" }}
           />
-          <span className="text-[1.1rem] font-semibold tracking-tight text-gray-900">
+          <span className="text-lg font-semibold tracking-tight text-gray-900">
             FinanceKite
           </span>
         </Link>
@@ -83,7 +83,7 @@ export function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="px-4 py-2 text-[0.95rem] font-medium text-gray-600 hover:text-gray-900 rounded-full hover:bg-black/5 transition-colors duration-150"
+              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-900/5 transition-all duration-150"
             >
               {link.label}
             </Link>
@@ -94,13 +94,13 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           <Link
             href="/sign-in"
-            className="text-[0.95rem] font-medium text-gray-600 hover:text-gray-900 transition-colors duration-150"
+            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-all duration-150"
           >
             Sign in
           </Link>
           <Link
             href="/sign-up"
-            className="inline-flex items-center justify-center rounded-full bg-gray-900 px-5 py-2 text-[0.95rem] font-semibold text-white hover:bg-gray-700 active:scale-[0.97] transition-colors duration-150"
+            className="inline-flex items-center justify-center rounded-full bg-gray-900 px-5 py-2 text-sm font-semibold text-white hover:bg-gray-800 active:scale-[0.98] transition-all duration-150"
           >
             Get started free
           </Link>
@@ -117,19 +117,19 @@ export function Navbar() {
           <SheetContent side="right" className="w-72 p-0">
             <div className="flex flex-col h-full">
 
-              <div className="flex items-center gap-2.5 px-6 py-5 border-b">
-                <KiteLogo className="text-primary" style={{ width: "1.4rem", height: "1.4rem" }} />
+              <div className="flex items-center gap-2.5 px-6 py-5 border-b border-gray-200">
+                <KiteLogo className="text-brand-500" style={{ width: "1.4rem", height: "1.4rem" }} />
                 <span className="text-base font-semibold tracking-tight text-gray-900">
                   FinanceKite
                 </span>
               </div>
 
-              <nav className="flex flex-col px-3 py-4 gap-0.5 flex-1">
+              <nav className="flex flex-col px-3 py-4 gap-1 flex-1">
                 {navLinks.map((link) => (
                   <SheetClose asChild key={link.href}>
                     <Link
                       href={link.href}
-                      className="flex items-center px-3 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-md hover:bg-gray-100 transition-colors"
+                      className="flex items-center px-3 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-all duration-150"
                     >
                       {link.label}
                     </Link>
@@ -137,16 +137,16 @@ export function Navbar() {
                 ))}
               </nav>
 
-              <div className="flex flex-col gap-2.5 px-5 pb-8">
+              <div className="flex flex-col gap-3 px-6 pb-8">
                 <Link
                   href="/sign-in"
-                  className="flex items-center justify-center w-full rounded-full border border-gray-200 bg-white py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-50 transition-colors"
+                  className="flex items-center justify-center w-full rounded-full border border-gray-200 bg-white py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 active:scale-[0.98] transition-all duration-150"
                 >
                   Sign in
                 </Link>
                 <Link
                   href="/sign-up"
-                  className="flex items-center justify-center w-full rounded-full bg-gray-900 py-2.5 text-sm font-semibold text-white hover:bg-gray-800 transition-colors"
+                  className="flex items-center justify-center w-full rounded-full bg-gray-900 py-2.5 text-sm font-semibold text-white hover:bg-gray-800 active:scale-[0.98] transition-all duration-150"
                 >
                   Get started free
                 </Link>

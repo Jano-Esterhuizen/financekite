@@ -1121,34 +1121,34 @@ export const Component = () => {
 
   return (
     <footer id="footer" className="w-full pb-0">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between p-10">
-        <div className="flex flex-col items-start justify-start gap-y-5 max-w-xs mx-0">
-          <Link href="/" className="flex items-center gap-2">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between px-6 py-16 max-w-5xl mx-auto">
+        <div className="flex flex-col items-start gap-y-4 max-w-xs">
+          <Link href="/" className="flex items-center gap-2.5">
             <KiteLogo
-              className="text-sky-500"
-              style={{ width: "1.6rem", height: "1.6rem" }}
+              className="text-brand-500"
+              style={{ width: "1.4rem", height: "1.4rem" }}
             />
-            <p className="text-xl font-semibold text-gray-900">FinanceKite</p>
+            <span className="text-lg font-semibold tracking-tight text-gray-900">FinanceKite</span>
           </Link>
-          <p className="tracking-tight text-muted-foreground font-medium">
+          <p className="text-sm leading-relaxed text-gray-500">
             {siteConfig.description}
           </p>
         </div>
-        <div className="pt-5 md:w-1/2">
-          <div className="flex flex-col items-start justify-start md:flex-row md:items-center md:justify-between gap-y-5 lg:pl-10">
+        <div className="pt-8 md:pt-0 md:w-1/2">
+          <div className="flex flex-col items-start md:flex-row md:items-start md:justify-between gap-y-8 lg:pl-10">
             {siteConfig.footerLinks.map((column, columnIndex) => (
               <ul key={columnIndex} className="flex flex-col gap-y-2">
-                <li className="mb-2 text-sm font-semibold text-gray-900">
+                <li className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-900">
                   {column.title}
                 </li>
                 {column.links.map((link) => (
                   <li
                     key={link.id}
-                    className="group inline-flex cursor-pointer items-center justify-start gap-1 text-[15px]/snug text-muted-foreground"
+                    className="group inline-flex cursor-pointer items-center justify-start gap-1 text-sm text-gray-500"
                   >
-                    <Link href={link.url}>{link.title}</Link>
-                    <div className="flex size-4 items-center justify-center border border-border rounded translate-x-0 transform opacity-0 transition-all duration-300 ease-out group-hover:translate-x-1 group-hover:opacity-100">
-                      <ChevronRightIcon className="h-4 w-4" />
+                    <Link href={link.url} className="hover:text-gray-900 transition-colors duration-150">{link.title}</Link>
+                    <div className="flex size-4 items-center justify-center border border-gray-200 rounded-full translate-x-0 transform opacity-0 transition-all duration-150 group-hover:translate-x-1 group-hover:opacity-100">
+                      <ChevronRightIcon className="h-3 w-3" />
                     </div>
                   </li>
                 ))}
@@ -1166,7 +1166,7 @@ export const Component = () => {
             className="h-full w-full"
             squareSize={2}
             gridGap={tablet ? 2 : 3}
-            color="#0ea5e9"
+            color="hsl(190, 48%, 44%)"
             maxOpacity={0.3}
             flickerChance={0.1}
           />

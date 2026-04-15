@@ -10,32 +10,32 @@ import { Component as FlickeringFooter } from "@/components/flickering-footer";
 
 export default function LandingPage() {
   return (
-    <div className="bg-gradient-to-b from-sky-50 to-white">
+    <div className="bg-gradient-to-b from-brand-50 to-white">
       {/* Hero — scroll animation section */}
       <ContainerScroll
         titleComponent={
           <div>
-            <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-sky-600">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-brand-600">
               Built for South African small businesses
             </p>
-            <h1 className="text-4xl font-bold text-gray-900 md:text-6xl leading-tight">
+            <h1 className="text-4xl font-bold tracking-tight leading-tight text-gray-900 md:text-6xl">
               Manage your finances,{" "}
-              <span className="text-sky-500">the smart way.</span>
+              <span className="text-brand-500">the smart way.</span>
             </h1>
-            <p className="mx-auto mt-5 max-w-xl text-lg text-gray-500">
+            <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-gray-500">
               Invoices, expenses, and recurring payments — all in one place.
               Get paid faster and stay on top of your cash flow.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href="/sign-up"
-                className="inline-flex items-center justify-center rounded-full bg-gray-900 px-7 py-3 text-sm font-semibold text-white hover:bg-gray-700 transition-colors"
+                className="inline-flex items-center justify-center rounded-full bg-gray-900 px-8 py-3 text-sm font-semibold text-white hover:bg-gray-800 active:scale-[0.98] transition-all duration-150"
               >
                 Get started free
               </Link>
               <Link
                 href="#features"
-                className="inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-7 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-8 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 active:scale-[0.98] transition-all duration-150"
               >
                 See features
               </Link>
@@ -44,19 +44,20 @@ export default function LandingPage() {
         }
       >
         <Image
-          src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1400&q=80"
+          src="/screenshots/dashboard-hero.png"
           alt="FinanceKite dashboard preview"
           height={720}
           width={1400}
           className="mx-auto rounded-2xl object-cover h-full object-top"
           draggable={false}
+          priority
         />
       </ContainerScroll>
 
       {/* Features section — overlaps the hero scroll with a white fade */}
       <section
         id="features"
-        className="relative z-10 -mt-64 min-h-screen rounded-t-[2.5rem] bg-white shadow-[0_-12px_40px_rgba(0,0,0,0.07)]"
+        className="relative z-10 -mt-64 min-h-screen rounded-t-[2.5rem] bg-white shadow-[0_-12px_40px_rgba(0,0,0,0.06)]"
       >
         {/* Gradient that bleeds upward over the card bottom */}
         <div className="pointer-events-none absolute -top-40 left-0 right-0 h-40 bg-gradient-to-b from-transparent to-white" />
@@ -68,7 +69,7 @@ export default function LandingPage() {
           description="Create, customise, and send invoices to clients instantly. FinanceKite tracks payment status automatically and follows up so you never have to chase a payment again."
           imageSrc="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80"
           imageAlt="Invoice management"
-          cardColor="bg-sky-50"
+          cardColor="bg-brand-50"
           buttonPrimary={{ label: "Start invoicing free", href: "/sign-up" }}
         />
 
