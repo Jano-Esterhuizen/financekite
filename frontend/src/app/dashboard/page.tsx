@@ -50,13 +50,15 @@ export default function DashboardPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [recurringPayments, setRecurringPayments] = useState<RecurringPayment[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loadedForId, setLoadedForId] = useState<string | null>(null)
+
+  const loading = !!selectedBusiness && loadedForId !== selectedBusiness.id
 
   useEffect(() => {
     if (!selectedBusiness) return
 
     const id = selectedBusiness.id
-    setLoading(true)
+    let cancelled = false
 
     Promise.all([
       businessesApi.getFinancialSummary(id),
@@ -65,13 +67,19 @@ export default function DashboardPage() {
       recurringPaymentsApi.getAll(id),
     ])
       .then(([summaryData, invoiceData, expenseData, recurringData]) => {
+        if (cancelled) return
         setSummary(summaryData)
         setInvoices(invoiceData)
         setExpenses(expenseData)
         setRecurringPayments(recurringData)
+        setLoadedForId(id)
       })
-      .catch(console.error)
-      .finally(() => setLoading(false))
+      .catch((err) => {
+        console.error(err)
+        if (!cancelled) setLoadedForId(id)
+      })
+
+    return () => { cancelled = true }
   }, [selectedBusiness])
 
   const currency = selectedBusiness?.currencyCode ?? 'ZAR'

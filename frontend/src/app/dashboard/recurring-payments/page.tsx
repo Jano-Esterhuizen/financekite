@@ -106,24 +106,20 @@ function RecurringPaymentFormDialog({ open, onClose, onSave, initial, clients, s
     notes: '',
   }
 
-  const [form, setForm] = useState<FormData>(blank)
-
-  useEffect(() => {
-    if (initial) {
-      setForm({
-        description: initial.description,
-        amount: String(initial.amount),
-        billingCycle: initial.billingCycle,
-        startDate: initial.startDate.slice(0, 10),
-        nextDueDate: initial.nextDueDate.slice(0, 10),
-        isActive: initial.isActive,
-        clientId: initial.clientId ?? '',
-        notes: initial.notes ?? '',
-      })
-    } else {
-      setForm(blank)
-    }
-  }, [initial, open])
+  const [form, setForm] = useState<FormData>(() =>
+    initial
+      ? {
+          description: initial.description,
+          amount: String(initial.amount),
+          billingCycle: initial.billingCycle,
+          startDate: initial.startDate.slice(0, 10),
+          nextDueDate: initial.nextDueDate.slice(0, 10),
+          isActive: initial.isActive,
+          clientId: initial.clientId ?? '',
+          notes: initial.notes ?? '',
+        }
+      : blank
+  )
 
   const set = <K extends keyof FormData>(key: K, value: FormData[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -382,8 +378,9 @@ export default function RecurringPaymentsPage() {
         toast.success('Payment added.')
       }
       closeDialog()
-    } catch (err: any) {
-      const msg = err?.response?.data?.title ?? 'Something went wrong. Please try again.'
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { title?: string } } })?.response?.data?.title
+        ?? 'Something went wrong. Please try again.'
       toast.error(msg)
       console.error(err)
     } finally {
@@ -583,6 +580,7 @@ export default function RecurringPaymentsPage() {
       </div>
 
       <RecurringPaymentFormDialog
+        key={dialogOpen ? (editTarget?.id ?? 'new') : 'closed'}
         open={dialogOpen}
         onClose={closeDialog}
         onSave={handleSave}
