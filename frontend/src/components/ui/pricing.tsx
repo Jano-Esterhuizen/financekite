@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CheckIcon } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
+import { BlurTextEffect } from "@/components/ui/blur-text-effect";
 
 type Plan = "monthly" | "annually";
 
@@ -74,13 +75,15 @@ export default function Pricing() {
       <div className="flex flex-col items-center justify-center max-w-2xl mx-auto px-6">
         <div className="flex flex-col items-center text-center max-w-2xl mx-auto">
           <p className="text-xs font-semibold uppercase tracking-widest text-brand-600">
-            Pricing
+            <BlurTextEffect>Pricing</BlurTextEffect>
           </p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mt-3 text-gray-900">
-            Simple, transparent pricing
+            <BlurTextEffect>Simple, transparent pricing</BlurTextEffect>
           </h2>
           <p className="text-base md:text-lg text-center leading-relaxed text-gray-500 mt-4">
-            No hidden fees. Cancel anytime. All prices in ZAR.
+            <BlurTextEffect charAnimation={false}>
+              No hidden fees. Cancel anytime. All prices in ZAR.
+            </BlurTextEffect>
           </p>
         </div>
 

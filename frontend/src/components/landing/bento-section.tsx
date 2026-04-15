@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BlurTextEffect } from "@/components/ui/blur-text-effect";
 
 export function BentoSection() {
   return (
@@ -7,15 +8,16 @@ export function BentoSection() {
         {/* Header */}
         <div className="mb-12 text-center">
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-brand-600">
-            Built for your workflow
+            <BlurTextEffect>Built for your workflow</BlurTextEffect>
           </p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900">
-            Everything your business needs,{" "}
-            <span className="text-brand-500">in one place</span>
+            <BlurTextEffect>{"Everything your business needs, "}</BlurTextEffect>
+            <BlurTextEffect className="text-brand-500">in one place</BlurTextEffect>
           </h2>
           <p className="mx-auto mt-4 max-w-lg leading-relaxed text-gray-500">
-            From invoicing to expenses and recurring payments — FinanceKite
-            handles your finances so you can focus on growing your business.
+            <BlurTextEffect charAnimation={false}>
+              From invoicing to expenses and recurring payments — FinanceKite handles your finances so you can focus on growing your business.
+            </BlurTextEffect>
           </p>
         </div>
 

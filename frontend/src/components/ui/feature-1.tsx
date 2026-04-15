@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BlurTextEffect } from "@/components/ui/blur-text-effect";
 
 interface Feature1Props {
   badge?: string;
@@ -35,15 +36,17 @@ export const Feature1 = ({
           <div className="flex flex-col items-start text-left">
             {badge && (
               <span className="mb-3 text-xs font-semibold uppercase tracking-widest text-brand-600">
-                {badge}
+                <BlurTextEffect>{badge}</BlurTextEffect>
               </span>
             )}
             <h2 className="mb-4 text-3xl md:text-4xl font-bold tracking-tight leading-tight text-gray-900">
-              {title}
+              <BlurTextEffect>{title}</BlurTextEffect>
             </h2>
-            <p className="mb-8 text-base lg:text-lg leading-relaxed text-gray-500">
-              {description}
-            </p>
+            {description && (
+              <p className="mb-8 text-base lg:text-lg leading-relaxed text-gray-500">
+                <BlurTextEffect charAnimation={false}>{description}</BlurTextEffect>
+              </p>
+            )}
             <div className="flex flex-wrap gap-3">
               <Link
                 href={buttonPrimary.href}
