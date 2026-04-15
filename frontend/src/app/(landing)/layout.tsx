@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/landing/navbar"
+import { PageLoader } from "@/components/landing/page-loader"
 
 export default function LandingLayout({
   children,
@@ -7,6 +8,7 @@ export default function LandingLayout({
 }) {
   return (
     <>
+      <PageLoader />
       <Navbar />
       <main>{children}</main>
     </>
