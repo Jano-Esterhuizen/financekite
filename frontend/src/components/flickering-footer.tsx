@@ -833,6 +833,17 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
     return getRGBA(color);
   }, [color]);
 
+  // Pre-compute a palette of color strings so drawGrid uses cheap array lookups
+  // instead of parsing/formatting color strings ~20k times per frame
+  const PALETTE_SIZE = 32;
+  const colorPalette = useMemo(() => {
+    const palette: string[] = new Array(PALETTE_SIZE + 1);
+    for (let i = 0; i <= PALETTE_SIZE; i++) {
+      palette[i] = colorWithOpacity(memoizedColor, i / PALETTE_SIZE);
+    }
+    return palette;
+  }, [memoizedColor]);
+
   const drawGrid = useCallback(
     (
       ctx: CanvasRenderingContext2D,
@@ -842,57 +853,29 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
       rows: number,
       squares: Float32Array,
       dpr: number,
+      textMask: Uint8Array,
     ) => {
       ctx.clearRect(0, 0, width, height);
 
-      // Create a separate canvas for the text mask
-      const maskCanvas = document.createElement("canvas");
-      maskCanvas.width = width;
-      maskCanvas.height = height;
-      const maskCtx = maskCanvas.getContext("2d", { willReadFrequently: true });
-      if (!maskCtx) return;
+      const step = (squareSize + gridGap) * dpr;
+      const sw = squareSize * dpr;
+      const sh = squareSize * dpr;
 
-      // Draw text on mask canvas
-      if (text) {
-        maskCtx.save();
-        maskCtx.scale(dpr, dpr);
-        maskCtx.fillStyle = "white";
-        maskCtx.font = `${fontWeight} ${fontSize}px "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-        maskCtx.textAlign = "center";
-        maskCtx.textBaseline = "middle";
-        maskCtx.fillText(text, width / (2 * dpr), height / (2 * dpr));
-        maskCtx.restore();
-      }
-
-      // Draw flickering squares with optimized RGBA colors
       for (let i = 0; i < cols; i++) {
         for (let j = 0; j < rows; j++) {
-          const x = i * (squareSize + gridGap) * dpr;
-          const y = j * (squareSize + gridGap) * dpr;
-          const squareWidth = squareSize * dpr;
-          const squareHeight = squareSize * dpr;
-
-          const maskData = maskCtx.getImageData(
-            x,
-            y,
-            squareWidth,
-            squareHeight,
-          ).data;
-          const hasText = maskData.some(
-            (value, index) => index % 4 === 0 && value > 0,
-          );
-
           const opacity = squares[i * rows + j];
-          const finalOpacity = hasText
+          const finalOpacity = textMask[i * rows + j]
             ? Math.min(1, opacity * 3 + 0.4)
             : opacity;
 
-          ctx.fillStyle = colorWithOpacity(memoizedColor, finalOpacity);
-          ctx.fillRect(x, y, squareWidth, squareHeight);
+          const bucket = Math.min(PALETTE_SIZE, Math.round(finalOpacity * PALETTE_SIZE));
+          if (bucket === 0) continue; // skip fully transparent cells
+          ctx.fillStyle = colorPalette[bucket];
+          ctx.fillRect(i * step, j * step, sw, sh);
         }
       }
     },
-    [memoizedColor, squareSize, gridGap, text, fontSize, fontWeight],
+    [colorPalette, squareSize, gridGap, PALETTE_SIZE],
   );
 
   const setupCanvas = useCallback(
@@ -910,9 +893,51 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
         squares[i] = Math.random() * maxOpacity;
       }
 
-      return { cols, rows, squares, dpr };
+      // Pre-compute text mask once so drawGrid doesn't need getImageData per cell per frame
+      const textMask = new Uint8Array(cols * rows);
+      if (text) {
+        const maskCanvas = document.createElement("canvas");
+        maskCanvas.width = width * dpr;
+        maskCanvas.height = height * dpr;
+        const maskCtx = maskCanvas.getContext("2d", { willReadFrequently: true });
+        if (maskCtx) {
+          maskCtx.save();
+          maskCtx.scale(dpr, dpr);
+          maskCtx.fillStyle = "white";
+          maskCtx.font = `${fontWeight} ${fontSize}px "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+          maskCtx.textAlign = "center";
+          maskCtx.textBaseline = "middle";
+          maskCtx.fillText(text, width / 2, height / 2);
+          maskCtx.restore();
+
+          const imageData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+          const pixels = imageData.data;
+          const canvasW = maskCanvas.width;
+
+          for (let i = 0; i < cols; i++) {
+            for (let j = 0; j < rows; j++) {
+              const x = Math.floor(i * (squareSize + gridGap) * dpr);
+              const y = Math.floor(j * (squareSize + gridGap) * dpr);
+              const sw = Math.floor(squareSize * dpr);
+              const sh = Math.floor(squareSize * dpr);
+
+              let hasText = false;
+              for (let py = y; py < y + sh && py < maskCanvas.height && !hasText; py++) {
+                for (let px = x; px < x + sw && px < canvasW && !hasText; px++) {
+                  if (pixels[(py * canvasW + px) * 4] > 0) {
+                    hasText = true;
+                  }
+                }
+              }
+              textMask[i * rows + j] = hasText ? 1 : 0;
+            }
+          }
+        }
+      }
+
+      return { cols, rows, squares, dpr, textMask };
     },
-    [squareSize, gridGap, maxOpacity],
+    [squareSize, gridGap, maxOpacity, text, fontSize, fontWeight],
   );
 
   const updateSquares = useCallback(
@@ -946,23 +971,26 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
 
     updateCanvasSize();
 
-    let lastTime = 0;
+    let lastDrawTime = 0;
+    const FRAME_INTERVAL = 50; // ~20fps — flickering doesn't need 60fps
     const animate = (time: number) => {
       if (!isInView) return;
 
-      const deltaTime = (time - lastTime) / 1000;
-      lastTime = time;
-
-      updateSquares(gridParams.squares, deltaTime);
-      drawGrid(
-        ctx,
-        canvas.width,
-        canvas.height,
-        gridParams.cols,
-        gridParams.rows,
-        gridParams.squares,
-        gridParams.dpr,
-      );
+      const elapsed = lastDrawTime === 0 ? FRAME_INTERVAL : time - lastDrawTime;
+      if (elapsed >= FRAME_INTERVAL) {
+        lastDrawTime = time;
+        updateSquares(gridParams.squares, Math.min(elapsed / 1000, 0.1));
+        drawGrid(
+          ctx,
+          canvas.width,
+          canvas.height,
+          gridParams.cols,
+          gridParams.rows,
+          gridParams.squares,
+          gridParams.dpr,
+          gridParams.textMask,
+        );
+      }
       animationFrameId = requestAnimationFrame(animate);
     };
 
