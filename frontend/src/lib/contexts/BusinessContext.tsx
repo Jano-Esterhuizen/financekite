@@ -7,7 +7,7 @@ interface BusinessContextValue {
   businesses: Business[]
   setBusinesses: (businesses: Business[]) => void
   selectedBusiness: Business | null
-  setSelectedBusiness: (business: Business) => void
+  setSelectedBusiness: (business: Business | null) => void
 }
 
 const BusinessContext = createContext<BusinessContextValue | null>(null)
