@@ -16,7 +16,7 @@ export default function LandingPage() {
         titleComponent={
           <div>
             <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-brand-600">
-              Built for South African small businesses
+              Built for solopreneurs and business owners
             </p>
             <h1 className="text-4xl font-bold tracking-tight leading-tight text-gray-900 md:text-6xl">
               Manage your finances,{" "}
@@ -69,7 +69,7 @@ export default function LandingPage() {
           description="Create, customise, and send invoices to clients instantly. FinanceKite tracks payment status automatically and follows up so you never have to chase a payment again."
           imageSrc="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80"
           imageAlt="Invoice management"
-          cardColor="bg-brand-50"
+          cardColor="bg-gray-100"
           buttonPrimary={{ label: "Start invoicing free", href: "/sign-up" }}
         />
 
@@ -80,7 +80,7 @@ export default function LandingPage() {
           description="Capture business expenses in seconds, categorise them with ease, and always know exactly where your money is going — all from one clean dashboard."
           imageSrc="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80"
           imageAlt="Expense tracking dashboard"
-          cardColor="bg-violet-50"
+          cardColor="bg-gray-100"
           buttonPrimary={{ label: "Track expenses", href: "/sign-up" }}
         />
 
@@ -91,7 +91,7 @@ export default function LandingPage() {
           description="Set up recurring payment schedules once and let FinanceKite send automatic reminders to clients. Keep your cash flow healthy and your admin overhead zero."
           imageSrc="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80"
           imageAlt="Recurring payments"
-          cardColor="bg-emerald-50"
+          cardColor="bg-gray-100"
           buttonPrimary={{ label: "Get started free", href: "/sign-up" }}
         />
 

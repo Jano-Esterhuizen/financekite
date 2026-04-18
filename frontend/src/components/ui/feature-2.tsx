@@ -24,7 +24,7 @@ export const Feature2 = ({
   description,
   imageSrc,
   imageAlt,
-  cardColor = "bg-violet-50",
+  cardColor = "bg-gray-100",
   buttonPrimary,
   buttonSecondary,
 }: Feature2Props) => {

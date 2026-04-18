@@ -34,7 +34,7 @@ export function BentoSection() {
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:grid-rows-[260px_260px_auto]">
 
           {/* ── Businesses: wide top-left, side-by-side layout ── */}
-          <div className="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-brand-50 lg:col-span-2 lg:row-span-1 lg:flex-row lg:items-center">
+          <div className="group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 transition-colors duration-300 hover:bg-brand-100 lg:col-span-2 lg:row-span-1 lg:flex-row lg:items-center">
             <div className="p-6 lg:w-56 lg:flex-shrink-0">
               <span className="text-xs font-semibold uppercase tracking-widest text-brand-600">
                 Multi-Business
@@ -47,17 +47,19 @@ export function BentoSection() {
                 clients, invoices, expenses, and reports, all under one account.
               </p>
             </div>
-            <div className="flex-1 overflow-hidden lg:h-full">
-              <img
-                src="/screenshots/businesses.png"
-                alt="FinanceKite business management"
-                className="h-full w-full rounded-t-xl border border-gray-200 object-cover object-top shadow-sm lg:rounded-t-none lg:rounded-r-xl lg:border-l lg:border-t-0"
-              />
+            <div className="flex-1 flex items-center justify-center p-4 lg:py-4 lg:pr-6 lg:pl-0">
+              <div className="max-w-[60%] overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+                <img
+                  src="/screenshots/businesses.png"
+                  alt="FinanceKite business management"
+                  className="w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
             </div>
           </div>
 
           {/* ── Streamline: tall right column spanning rows 1 & 2 ── */}
-          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white lg:col-start-3 lg:row-start-1 lg:row-span-2">
+          <div className="group overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 transition-colors duration-300 hover:bg-brand-100 lg:col-start-3 lg:row-start-1 lg:row-span-2">
             <div className="p-6 pb-0">
               <span className="text-xs font-semibold uppercase tracking-widest text-brand-600">
                 Streamline
@@ -72,17 +74,19 @@ export function BentoSection() {
               </p>
             </div>
             <div className="mt-4 px-6">
-              <img
-                src="/screenshots/sidebar.png"
-                alt="FinanceKite sidebar navigation"
-                className="w-full rounded-t-xl border border-gray-200 object-cover object-top shadow-sm"
-                style={{ maxHeight: "300px" }}
-              />
+              <div className="overflow-hidden rounded-t-xl border border-gray-200 shadow-sm">
+                <img
+                  src="/screenshots/sidebar.png"
+                  alt="FinanceKite sidebar navigation"
+                  className="w-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                  style={{ maxHeight: "300px" }}
+                />
+              </div>
             </div>
           </div>
 
           {/* ── Expenses: bottom-left ── */}
-          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-violet-50">
+          <div className="group overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 transition-colors duration-300 hover:bg-brand-100">
             <div className="p-6 pb-0">
               <span className="text-xs font-semibold uppercase tracking-widest text-brand-600">
                 Expenses
@@ -95,17 +99,19 @@ export function BentoSection() {
               </p>
             </div>
             <div className="mt-4 px-6">
-              <img
-                src="/screenshots/expenses.png"
-                alt="FinanceKite expenses"
-                className="w-full rounded-t-xl border border-gray-200 object-cover object-top shadow-sm"
-                style={{ maxHeight: "130px" }}
-              />
+              <div className="overflow-hidden rounded-t-xl border border-gray-200 shadow-sm">
+                <img
+                  src="/screenshots/expenses.png"
+                  alt="FinanceKite expenses"
+                  className="w-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                  style={{ maxHeight: "130px" }}
+                />
+              </div>
             </div>
           </div>
 
           {/* ── Clients: bottom-middle ── */}
-          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-emerald-50">
+          <div className="group overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 transition-colors duration-300 hover:bg-brand-100">
             <div className="p-6 pb-0">
               <span className="text-xs font-semibold uppercase tracking-widest text-brand-600">
                 Clients
@@ -119,17 +125,19 @@ export function BentoSection() {
               </p>
             </div>
             <div className="mt-4 px-6">
-              <img
-                src="/screenshots/clients.png"
-                alt="FinanceKite clients"
-                className="w-full rounded-t-xl border border-gray-200 object-cover object-top shadow-sm"
-                style={{ maxHeight: "130px" }}
-              />
+              <div className="overflow-hidden rounded-t-xl border border-gray-200 shadow-sm">
+                <img
+                  src="/screenshots/clients.png"
+                  alt="FinanceKite clients"
+                  className="w-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                  style={{ maxHeight: "130px" }}
+                />
+              </div>
             </div>
           </div>
 
           {/* ── Reports: full-width horizontal bottom card ── */}
-          <div className="flex flex-col gap-6 overflow-hidden rounded-2xl border border-gray-200 bg-amber-50 p-6 lg:col-span-3 lg:flex-row lg:items-center">
+          <div className="group flex flex-col gap-6 overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 p-6 transition-colors duration-300 hover:bg-brand-100 lg:col-span-3 lg:flex-row lg:items-center">
             {/* Text */}
             <div className="lg:w-72 lg:flex-shrink-0">
               <span className="text-xs font-semibold uppercase tracking-widest text-brand-600">
@@ -155,7 +163,7 @@ export function BentoSection() {
               <img
                 src="/screenshots/dashboard.png"
                 alt="FinanceKite dashboard overview"
-                className="w-full object-cover object-top"
+                className="w-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
                 style={{ maxHeight: "200px" }}
               />
             </div>

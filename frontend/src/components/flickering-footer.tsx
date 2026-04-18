@@ -1091,7 +1091,7 @@ export const BLUR_FADE_DELAY = 0.15;
 
 export const siteConfig = {
   description:
-    "Invoices, expenses, and recurring payments — all in one place. Built for South African small businesses.",
+    "Invoices, expenses, and recurring payments — all in one place. Built for solopreneurs and business owners.",
   footerLinks: [
     {
       title: "Product",
