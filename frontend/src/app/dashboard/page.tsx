@@ -12,6 +12,7 @@ import RevenueChart from '@/components/dashboard/RevenueChart'
 import ExpensesDonut from '@/components/dashboard/ExpensesDonut'
 import OverdueInvoices from '@/components/dashboard/OverdueInvoices'
 import UpcomingPayments from '@/components/dashboard/UpcomingPayments'
+import SidebarToggle from '@/components/dashboard/SidebarToggle'
 
 function MetricSkeleton() {
   return (
@@ -140,12 +141,15 @@ export default function DashboardPage() {
     <div className="flex flex-col flex-1 overflow-hidden">
       {/* Top bar */}
       <header className="flex items-center justify-between px-8 py-4 border-b border-border bg-card flex-shrink-0">
-        <div className="text-sm text-muted-foreground">
-          <span className="text-foreground font-medium">
-            {selectedBusiness?.name ?? 'Dashboard'}
-          </span>
-          {' / '}
-          <span>Overview</span>
+        <div className="flex items-center">
+          <SidebarToggle />
+          <div className="text-sm text-muted-foreground">
+            <span className="text-foreground font-medium">
+              {selectedBusiness?.name ?? 'Dashboard'}
+            </span>
+            {' / '}
+            <span>Overview</span>
+          </div>
         </div>
         <div className="text-sm text-muted-foreground">
           {new Date().toLocaleDateString('en-ZA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}

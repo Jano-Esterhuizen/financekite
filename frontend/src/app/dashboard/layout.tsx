@@ -2,11 +2,12 @@
 
 import { useEffect } from 'react'
 import { BusinessProvider, useBusiness } from '@/lib/contexts/BusinessContext'
+import { SidebarProvider } from '@/lib/contexts/SidebarContext'
 import AppSidebar from '@/components/dashboard/AppSidebar'
 import { businessesApi } from '@/lib/api/businesses'
 
 function DashboardShell({ children }: { children: React.ReactNode }) {
-  const { setBusinesses, setSelectedBusiness, selectedBusiness } = useBusiness()
+  const { setBusinesses, setSelectedBusiness } = useBusiness()
 
   useEffect(() => {
     businessesApi.getAll().then((data) => {
@@ -28,7 +29,9 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <BusinessProvider>
-      <DashboardShell>{children}</DashboardShell>
+      <SidebarProvider>
+        <DashboardShell>{children}</DashboardShell>
+      </SidebarProvider>
     </BusinessProvider>
   )
 }

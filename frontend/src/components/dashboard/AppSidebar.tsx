@@ -17,6 +17,7 @@ import {
   Plus,
   Pencil,
   Trash2,
+  Building2,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -28,6 +29,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { useBusiness } from '@/lib/contexts/BusinessContext'
+import { useSidebar } from '@/lib/contexts/SidebarContext'
 import { businessesApi } from '@/lib/api/businesses'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
@@ -57,6 +59,7 @@ export default function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { businesses, setBusinesses, selectedBusiness, setSelectedBusiness } = useBusiness()
+  const { collapsed } = useSidebar()
 
   // Business form dialog state
   const [formOpen, setFormOpen] = useState(false)
@@ -117,19 +120,39 @@ export default function AppSidebar() {
   }
 
   return (
-    <aside className="flex flex-col w-64 h-screen bg-card border-r border-border px-4 py-6 flex-shrink-0">
+    <aside
+      className={`flex flex-col h-screen bg-card border-r border-border py-6 flex-shrink-0 transition-all duration-300 ease-in-out ${
+        collapsed ? 'w-16 px-2' : 'w-64 px-4'
+      }`}
+    >
       {/* Brand */}
-      <div className="flex items-center mb-6 px-2">
-        <Image src="/logo.png" alt="FinanceKite" width={160} height={40} className="object-contain" priority />
+      <div className={`flex items-center mb-6 ${collapsed ? 'justify-center' : 'px-2'}`}>
+        {!collapsed && (
+          <Image src="/logo.png" alt="FinanceKite" width={160} height={40} className="object-contain" priority />
+        )}
+        {collapsed && (
+          <Image src="/logo.png" alt="FinanceKite" width={28} height={28} className="object-contain" priority />
+        )}
       </div>
 
       {/* Business picker */}
-      <div className="mb-6 px-1">
+      <div className={`mb-6 ${collapsed ? 'px-0' : 'px-1'}`}>
         {selectedBusiness ? (
           <DropdownMenu>
-            <DropdownMenuTrigger className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-secondary text-sm font-medium text-foreground hover:bg-accent transition-colors outline-none">
-              <span className="truncate">{selectedBusiness.name}</span>
-              <ChevronDown size={14} className="text-muted-foreground flex-shrink-0 ml-2" />
+            <DropdownMenuTrigger
+              className={`w-full flex items-center rounded-lg bg-secondary text-sm font-medium text-foreground hover:bg-accent transition-colors outline-none ${
+                collapsed ? 'justify-center p-2' : 'justify-between px-3 py-2'
+              }`}
+              title={collapsed ? selectedBusiness.name : undefined}
+            >
+              {collapsed ? (
+                <Building2 size={18} />
+              ) : (
+                <>
+                  <span className="truncate">{selectedBusiness.name}</span>
+                  <ChevronDown size={14} className="text-muted-foreground flex-shrink-0 ml-2" />
+                </>
+              )}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
               <DropdownMenuLabel>Switch Business</DropdownMenuLabel>
@@ -163,20 +186,27 @@ export default function AppSidebar() {
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <Button onClick={openCreate} variant="outline" className="w-full gap-2 justify-start">
+          <Button
+            onClick={openCreate}
+            variant="outline"
+            className={collapsed ? 'w-full justify-center p-2' : 'w-full gap-2 justify-start'}
+            title={collapsed ? 'Create Your First Business' : undefined}
+          >
             <Plus size={14} />
-            Create Your First Business
+            {!collapsed && 'Create Your First Business'}
           </Button>
         )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-6">
+      <nav className="flex-1 space-y-6 overflow-hidden">
         {navSections.map((section) => (
           <div key={section.label}>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 mb-2">
-              {section.label}
-            </p>
+            {!collapsed && (
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 mb-2">
+                {section.label}
+              </p>
+            )}
             <ul className="space-y-1">
               {section.items.map((item) => {
                 const isActive = pathname === item.href
@@ -185,14 +215,17 @@ export default function AppSidebar() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      title={collapsed ? item.label : undefined}
+                      className={`flex items-center rounded-lg text-sm font-medium transition-colors ${
+                        collapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2'
+                      } ${
                         isActive
                           ? 'bg-primary text-primary-foreground'
                           : 'text-sidebar-foreground hover:bg-secondary'
                       }`}
                     >
-                      <Icon size={18} />
-                      <span>{item.label}</span>
+                      <Icon size={18} className="flex-shrink-0" />
+                      {!collapsed && <span>{item.label}</span>}
                     </Link>
                   </li>
                 )
@@ -206,17 +239,23 @@ export default function AppSidebar() {
       <div className="border-t border-border pt-4 space-y-1">
         <Link
           href="/dashboard/settings"
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground hover:bg-secondary transition-colors"
+          title={collapsed ? 'Settings' : undefined}
+          className={`flex items-center rounded-lg text-sm text-sidebar-foreground hover:bg-secondary transition-colors ${
+            collapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2'
+          }`}
         >
-          <Settings size={18} />
-          <span>Settings</span>
+          <Settings size={18} className="flex-shrink-0" />
+          {!collapsed && <span>Settings</span>}
         </Link>
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground hover:bg-secondary transition-colors w-full text-left"
+          title={collapsed ? 'Sign Out' : undefined}
+          className={`flex items-center rounded-lg text-sm text-sidebar-foreground hover:bg-secondary transition-colors w-full ${
+            collapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2 text-left'
+          }`}
         >
-          <LogOut size={18} />
-          <span>Sign Out</span>
+          <LogOut size={18} className="flex-shrink-0" />
+          {!collapsed && <span>Sign Out</span>}
         </button>
       </div>
 

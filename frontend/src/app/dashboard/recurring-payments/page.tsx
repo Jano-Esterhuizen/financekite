@@ -6,6 +6,7 @@ import { useBusiness } from '@/lib/contexts/BusinessContext'
 import { recurringPaymentsApi } from '@/lib/api/recurring-payments'
 import { clientsApi } from '@/lib/api/clients'
 import type { RecurringPayment, Client } from '@/lib/types'
+import SidebarToggle from '@/components/dashboard/SidebarToggle'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -405,10 +406,13 @@ export default function RecurringPaymentsPage() {
     <div className="flex flex-col flex-1 overflow-hidden">
       {/* Header */}
       <header className="flex items-center justify-between px-8 py-4 border-b border-border bg-card flex-shrink-0">
-        <div className="text-sm text-muted-foreground">
-          <span className="text-foreground font-medium">{selectedBusiness?.name ?? 'Dashboard'}</span>
-          {' / '}
-          <span>Recurring Payments</span>
+        <div className="flex items-center">
+          <SidebarToggle />
+          <div className="text-sm text-muted-foreground">
+            <span className="text-foreground font-medium">{selectedBusiness?.name ?? 'Dashboard'}</span>
+            {' / '}
+            <span>Recurring Payments</span>
+          </div>
         </div>
         <div className="text-sm text-muted-foreground">
           {new Date().toLocaleDateString('en-ZA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}

@@ -3,6 +3,7 @@
 import { useTheme } from 'next-themes'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Sun, Moon, Monitor } from 'lucide-react'
+import SidebarToggle from '@/components/dashboard/SidebarToggle'
 
 const THEMES = [
   { value: 'light', label: 'Light', icon: Sun },
@@ -17,8 +18,11 @@ export default function SettingsPage() {
     <div className="flex flex-col flex-1 overflow-hidden">
       {/* Header */}
       <header className="flex items-center justify-between px-8 py-4 border-b border-border bg-card flex-shrink-0">
-        <div className="text-sm text-muted-foreground">
-          <span className="text-foreground font-medium">Settings</span>
+        <div className="flex items-center">
+          <SidebarToggle />
+          <div className="text-sm text-muted-foreground">
+            <span className="text-foreground font-medium">Settings</span>
+          </div>
         </div>
         <div className="text-sm text-muted-foreground">
           {new Date().toLocaleDateString('en-ZA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
