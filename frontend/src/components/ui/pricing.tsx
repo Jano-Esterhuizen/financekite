@@ -7,15 +7,14 @@ import { CheckIcon } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import { BlurTextEffect } from "@/components/ui/blur-text-effect";
+import { useCurrency } from "@/hooks/useCurrency";
 
 type Plan = "monthly" | "annually";
 
 type PLAN = {
-  id: string;
+  id: "starter" | "pro";
   title: string;
   desc: string;
-  monthlyPrice: number;
-  annuallyPrice: number;
   badge?: string;
   buttonText: string;
   features: string[];
@@ -27,8 +26,6 @@ const PLANS: PLAN[] = [
     id: "starter",
     title: "Starter",
     desc: "Perfect for freelancers and sole traders who need simple, professional financial management without the complexity.",
-    monthlyPrice: 99,
-    annuallyPrice: 990,
     buttonText: "Get started free",
     features: [
       "Up to 10 clients",
@@ -45,8 +42,6 @@ const PLANS: PLAN[] = [
     id: "pro",
     title: "Pro",
     desc: "Built for growing businesses that need unlimited invoicing, advanced reports, and priority support.",
-    monthlyPrice: 249,
-    annuallyPrice: 2490,
     badge: "Best Value",
     buttonText: "Start Pro trial",
     features: [
@@ -65,6 +60,7 @@ const PLANS: PLAN[] = [
 
 export default function Pricing() {
   const [billPlan, setBillPlan] = useState<Plan>("monthly");
+  const { currency, prices, symbol } = useCurrency();
 
   const handleSwitch = () => {
     setBillPlan((prev) => (prev === "monthly" ? "annually" : "monthly"));
@@ -82,7 +78,7 @@ export default function Pricing() {
           </h2>
           <p className="text-base md:text-lg text-center leading-relaxed text-gray-500 mt-4">
             <BlurTextEffect charAnimation={false}>
-              No hidden fees. Cancel anytime. All prices in ZAR.
+{`No hidden fees. Cancel anytime. All prices in ${currency}.`}
             </BlurTextEffect>
           </p>
         </div>
@@ -109,14 +105,33 @@ export default function Pricing() {
       {/* Plan cards */}
       <div className="grid w-full grid-cols-1 lg:grid-cols-2 pt-12 gap-6 max-w-4xl mx-auto px-6">
         {PLANS.map((plan) => (
-          <PlanCard key={plan.id} plan={plan} billPlan={billPlan} />
+          <PlanCard
+            key={plan.id}
+            plan={plan}
+            billPlan={billPlan}
+            monthlyPrice={prices[plan.id].monthly}
+            annuallyPrice={prices[plan.id].annual}
+            symbol={symbol}
+          />
         ))}
       </div>
     </section>
   );
 }
 
-function PlanCard({ plan, billPlan }: { plan: PLAN; billPlan: Plan }) {
+function PlanCard({
+  plan,
+  billPlan,
+  monthlyPrice,
+  annuallyPrice,
+  symbol,
+}: {
+  plan: PLAN;
+  billPlan: Plan;
+  monthlyPrice: number;
+  annuallyPrice: number;
+  symbol: string;
+}) {
   const isPro = plan.id === "pro";
 
   return (
@@ -143,8 +158,8 @@ function PlanCard({ plan, billPlan }: { plan: PLAN; billPlan: Plan }) {
         </div>
         <div className="mt-3 text-2xl font-bold md:text-5xl text-gray-900">
           <NumberFlow
-            value={billPlan === "monthly" ? plan.monthlyPrice : plan.annuallyPrice}
-            prefix="R"
+            value={billPlan === "monthly" ? monthlyPrice : annuallyPrice}
+            prefix={symbol}
             suffix={billPlan === "monthly" ? "/mo" : "/yr"}
             format={{
               minimumFractionDigits: 0,
