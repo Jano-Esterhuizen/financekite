@@ -33,49 +33,48 @@ export function BentoSection() {
         */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:grid-rows-[260px_260px_auto]">
 
-          {/* ── Dashboard: wide top-left ── */}
-          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-brand-50 lg:col-span-2 lg:row-span-1">
-            <div className="p-6 pb-0">
+          {/* ── Businesses: wide top-left, side-by-side layout ── */}
+          <div className="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-brand-50 lg:col-span-2 lg:row-span-1 lg:flex-row lg:items-center">
+            <div className="p-6 lg:w-56 lg:flex-shrink-0">
               <span className="text-xs font-semibold uppercase tracking-widest text-brand-600">
-                Dashboard
+                Multi-Business
               </span>
               <h3 className="mt-2 text-xl font-semibold text-gray-900">
-                Your finances at a glance
+                Manage multiple businesses
               </h3>
-              <p className="mt-2 max-w-xs text-sm leading-relaxed text-gray-500">
-                One overview for revenue, outstanding invoices, and expenses —
-                updated in real time so you always know where you stand.
+              <p className="mt-2 text-sm leading-relaxed text-gray-500">
+                Switch between businesses in a click — each with its own
+                clients, invoices, expenses, and reports, all under one account.
               </p>
             </div>
-            <div className="mt-4 px-6">
+            <div className="flex-1 overflow-hidden lg:h-full">
               <img
-                src="/screenshots/dashboard.png"
-                alt="FinanceKite dashboard"
-                className="w-full rounded-t-xl border border-gray-200 object-cover object-top shadow-sm"
-                style={{ maxHeight: "160px" }}
+                src="/screenshots/businesses.png"
+                alt="FinanceKite business management"
+                className="h-full w-full rounded-t-xl border border-gray-200 object-cover object-top shadow-sm lg:rounded-t-none lg:rounded-r-xl lg:border-l lg:border-t-0"
               />
             </div>
           </div>
 
-          {/* ── Invoicing: tall right column spanning rows 1 & 2 ── */}
+          {/* ── Streamline: tall right column spanning rows 1 & 2 ── */}
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white lg:col-start-3 lg:row-start-1 lg:row-span-2">
             <div className="p-6 pb-0">
               <span className="text-xs font-semibold uppercase tracking-widest text-brand-600">
-                Invoicing
+                Streamline
               </span>
               <h3 className="mt-2 text-base font-semibold text-gray-900">
-                Professional invoices, instantly
+                Everything at your fingertips
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-gray-500">
-                Create, customise, and send branded invoices in seconds. Track
-                payment status automatically and get notified the moment a
-                client pays.
+                Navigate your entire business from one clean sidebar —
+                dashboard, expenses, clients, invoices, and recurring payments,
+                all one click away.
               </p>
             </div>
             <div className="mt-4 px-6">
               <img
-                src="/screenshots/invoices.png"
-                alt="FinanceKite invoices"
+                src="/screenshots/sidebar.png"
+                alt="FinanceKite sidebar navigation"
                 className="w-full rounded-t-xl border border-gray-200 object-cover object-top shadow-sm"
                 style={{ maxHeight: "300px" }}
               />
@@ -154,8 +153,8 @@ export function BentoSection() {
             {/* Screenshot */}
             <div className="flex-1 overflow-hidden rounded-xl border border-gray-200 shadow-sm">
               <img
-                src="/screenshots/reports.png"
-                alt="FinanceKite reports"
+                src="/screenshots/dashboard.png"
+                alt="FinanceKite dashboard overview"
                 className="w-full object-cover object-top"
                 style={{ maxHeight: "200px" }}
               />
