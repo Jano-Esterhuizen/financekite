@@ -48,7 +48,7 @@ export default function SignUpPage() {
     setGoogleLoading(true)
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}/callback` },
     })
     if (error) {
       toast.error(error.message)
