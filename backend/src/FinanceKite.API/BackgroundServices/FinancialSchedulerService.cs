@@ -25,12 +25,9 @@ public class FinancialSchedulerService(
             }
             catch (Exception ex)
             {
-                // Never let an unhandled exception kill the background service
                 logger.LogError(ex, "Error occurred in Financial Scheduler Service.");
             }
 
-            // Wait until next run — default 24 hours
-            // This can handle both 24 and 0.001
             var intervalHours = configuration.GetValue<double>("Scheduler:IntervalHours", 24);
             await Task.Delay(TimeSpan.FromHours(intervalHours), stoppingToken);
         }
@@ -40,21 +37,18 @@ public class FinancialSchedulerService(
     {
         logger.LogInformation("Running scheduled financial tasks at {Time}.", DateTime.UtcNow);
 
-        // Background services must create their own scope to use scoped services
-        // (like repositories which depend on DbContext)
         using var scope = scopeFactory.CreateScope();
 
-        var invoiceRepository = scope.ServiceProvider
-            .GetRequiredService<IInvoiceRepository>();
-        var recurringPaymentRepository = scope.ServiceProvider
-            .GetRequiredService<IRecurringPaymentRepository>();
-        var unitOfWork = scope.ServiceProvider
-            .GetRequiredService<IUnitOfWork>();
-        var emailService = scope.ServiceProvider
-            .GetRequiredService<IEmailService>();
+        var invoiceRepository = scope.ServiceProvider.GetRequiredService<IInvoiceRepository>();
+        var expenseRepository = scope.ServiceProvider.GetRequiredService<IExpenseRepository>();
+        var recurringPaymentRepository = scope.ServiceProvider.GetRequiredService<IRecurringPaymentRepository>();
+        var recurringInvoiceRepository = scope.ServiceProvider.GetRequiredService<IRecurringInvoiceRepository>();
+        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
 
         await MarkOverdueInvoicesAsync(invoiceRepository, unitOfWork, cancellationToken);
-        await SendPaymentRemindersAsync(recurringPaymentRepository, unitOfWork, emailService, cancellationToken);
+        await ProcessRecurringPaymentsAsync(recurringPaymentRepository, expenseRepository, unitOfWork, cancellationToken);
+        await ProcessRecurringInvoicesAsync(recurringInvoiceRepository, invoiceRepository, unitOfWork, emailService, cancellationToken);
     }
 
     private async Task MarkOverdueInvoicesAsync(
@@ -62,8 +56,7 @@ public class FinancialSchedulerService(
         IUnitOfWork unitOfWork,
         CancellationToken cancellationToken)
     {
-        var overdueInvoices = await invoiceRepository
-            .GetPendingOverdueAsync(cancellationToken);
+        var overdueInvoices = await invoiceRepository.GetPendingOverdueAsync(cancellationToken);
 
         if (!overdueInvoices.Any())
         {
@@ -79,60 +72,97 @@ public class FinancialSchedulerService(
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        logger.LogInformation(
-            "Marked {Count} invoice(s) as overdue.", overdueInvoices.Count);
+        logger.LogInformation("Marked {Count} invoice(s) as overdue.", overdueInvoices.Count);
     }
 
-    private async Task SendPaymentRemindersAsync(
+    private async Task ProcessRecurringPaymentsAsync(
         IRecurringPaymentRepository recurringPaymentRepository,
+        IExpenseRepository expenseRepository,
         IUnitOfWork unitOfWork,
-        IEmailService emailService,
         CancellationToken cancellationToken)
     {
-        var reminderDaysAhead = configuration.GetValue<int>("Scheduler:ReminderDaysAhead", 7);
-
-        var duePayments = await recurringPaymentRepository
-            .GetDueForReminderAsync(reminderDaysAhead, cancellationToken);
+        var duePayments = await recurringPaymentRepository.GetDueAsync(cancellationToken);
 
         if (!duePayments.Any())
         {
-            logger.LogInformation("No payment reminders to send.");
+            logger.LogInformation("No recurring payments to process.");
             return;
         }
 
         foreach (var payment in duePayments)
         {
-            // Only send email if the client has an email address
-            if (payment.Client?.Email is not null)
+            var expense = new Expense
             {
-                await emailService.SendReminderEmailAsync(
-                    toEmail: payment.Client.Email,
-                    toName: payment.Client.Name,
-                    businessName: payment.Business.Name,
-                    description: payment.Description,
-                    amount: payment.Amount,
-                    dueDate: payment.NextDueDate,
-                    cancellationToken: cancellationToken);
-            }
+                BusinessId = payment.BusinessId,
+                Description = payment.Description,
+                Amount = payment.Amount,
+                Date = DateTime.UtcNow,
+                Category = payment.Category,
+                Notes = $"Auto-generated from recurring payment: {payment.Description}"
+            };
 
-            // Advance to next billing cycle
+            await expenseRepository.CreateAsync(expense, cancellationToken);
+
             payment.AdvanceToNextCycle();
             payment.UpdatedAt = DateTime.UtcNow;
             await recurringPaymentRepository.UpdateAsync(payment, cancellationToken);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        logger.LogInformation("Processed {Count} recurring payment(s) into expenses.", duePayments.Count);
+    }
 
-        logger.LogInformation(
-            "Processed {Count} payment reminder(s).", duePayments.Count);
+    private async Task ProcessRecurringInvoicesAsync(
+        IRecurringInvoiceRepository recurringInvoiceRepository,
+        IInvoiceRepository invoiceRepository,
+        IUnitOfWork unitOfWork,
+        IEmailService emailService,
+        CancellationToken cancellationToken)
+    {
+        var dueInvoices = await recurringInvoiceRepository.GetDueAsync(cancellationToken);
+
+        if (!dueInvoices.Any())
+        {
+            logger.LogInformation("No recurring invoices to process.");
+            return;
+        }
+
+        foreach (var recurring in dueInvoices)
+        {
+            var invoiceNumber = $"REC-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}";
+
+            var invoice = new Invoice
+            {
+                BusinessId = recurring.BusinessId,
+                ClientId = recurring.ClientId,
+                InvoiceNumber = invoiceNumber,
+                Amount = recurring.Amount,
+                Status = InvoiceStatus.Pending,
+                IssuedDate = DateTime.UtcNow,
+                DueDate = DateTime.UtcNow,
+                Notes = $"Auto-generated from recurring invoice: {recurring.Description}"
+            };
+
+            await invoiceRepository.CreateAsync(invoice, cancellationToken);
+
+            if (recurring.Client?.Email is not null)
+            {
+                await emailService.SendReminderEmailAsync(
+                    toEmail: recurring.Client.Email,
+                    toName: recurring.Client.Name,
+                    businessName: recurring.Business.Name,
+                    description: recurring.Description,
+                    amount: recurring.Amount,
+                    dueDate: recurring.NextDueDate,
+                    cancellationToken: cancellationToken);
+            }
+
+            recurring.AdvanceToNextCycle();
+            recurring.UpdatedAt = DateTime.UtcNow;
+            await recurringInvoiceRepository.UpdateAsync(recurring, cancellationToken);
+        }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        logger.LogInformation("Processed {Count} recurring invoice(s) into invoices.", dueInvoices.Count);
     }
 }
-
-/*
-📘 Why IServiceScopeFactory instead of injecting repositories directly? Background services are registered as singletons
-They live for the entire app lifetime. But repositories and DbContext are scoped — they're designed to live for one request only. 
-You can't inject a scoped service into a singleton directly — it would cause a lifetime mismatch error. 
-Instead, we use IServiceScopeFactory to manually create a new scope each time the scheduled task runs
-getting fresh instances of all scoped services. This is the standard .NET pattern for background services.
-*/

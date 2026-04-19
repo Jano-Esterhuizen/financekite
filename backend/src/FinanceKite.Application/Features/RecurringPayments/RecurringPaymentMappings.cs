@@ -10,14 +10,13 @@ public static class RecurringPaymentMappings
         new(
             payment.Id,
             payment.BusinessId,
-            payment.ClientId,
-            payment.Client?.Name,
             payment.Description,
             payment.Amount,
             payment.BillingCycle,
             payment.StartDate,
             payment.NextDueDate,
             payment.IsActive,
+            payment.Category,
             payment.DaysUntilNextDue,
             payment.Notes,
             payment.CreatedAt

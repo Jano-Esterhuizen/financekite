@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, Search, RefreshCw, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Search, FileClock, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { useBusiness } from '@/lib/contexts/BusinessContext'
-import { recurringPaymentsApi } from '@/lib/api/recurring-payments'
-import type { RecurringPayment } from '@/lib/types'
+import { recurringInvoicesApi } from '@/lib/api/recurring-invoices'
+import { clientsApi } from '@/lib/api/clients'
+import type { RecurringInvoice, Client } from '@/lib/types'
 import SidebarToggle from '@/components/dashboard/SidebarToggle'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -34,17 +35,6 @@ const CYCLE_STYLES: Record<BillingCycle, string> = {
   Weekly:  'bg-blue-500/10 text-blue-600 border-0',
   Monthly: 'bg-primary/10 text-primary border-0',
   Yearly:  'bg-purple-500/10 text-purple-600 border-0',
-}
-
-const CATEGORIES = ['Hosting', 'Domain', 'Tools', 'Service', 'Other'] as const
-type ExpenseCategory = typeof CATEGORIES[number]
-
-const CATEGORY_STYLES: Record<ExpenseCategory, string> = {
-  Hosting: 'bg-sky-500/10 text-sky-600 border-0',
-  Domain:  'bg-violet-500/10 text-violet-600 border-0',
-  Tools:   'bg-amber-500/10 text-amber-600 border-0',
-  Service: 'bg-emerald-500/10 text-emerald-600 border-0',
-  Other:   'bg-muted text-muted-foreground border-0',
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -92,7 +82,7 @@ interface FormData {
   startDate: string
   nextDueDate: string
   isActive: boolean
-  category: ExpenseCategory
+  clientId: string
   notes: string
 }
 
@@ -100,11 +90,12 @@ interface FormDialogProps {
   open: boolean
   onClose: () => void
   onSave: (data: FormData) => Promise<void>
-  initial?: RecurringPayment | null
+  initial?: RecurringInvoice | null
+  clients: Client[]
   saving: boolean
 }
 
-function RecurringPaymentFormDialog({ open, onClose, onSave, initial, saving }: FormDialogProps) {
+function RecurringInvoiceFormDialog({ open, onClose, onSave, initial, clients, saving }: FormDialogProps) {
   const blank: FormData = {
     description: '',
     amount: '',
@@ -112,7 +103,7 @@ function RecurringPaymentFormDialog({ open, onClose, onSave, initial, saving }: 
     startDate: todayIso(),
     nextDueDate: todayIso(),
     isActive: true,
-    category: 'Other',
+    clientId: '',
     notes: '',
   }
 
@@ -125,7 +116,7 @@ function RecurringPaymentFormDialog({ open, onClose, onSave, initial, saving }: 
           startDate: initial.startDate.slice(0, 10),
           nextDueDate: initial.nextDueDate.slice(0, 10),
           isActive: initial.isActive,
-          category: initial.category,
+          clientId: initial.clientId ?? '',
           notes: initial.notes ?? '',
         }
       : blank
@@ -139,7 +130,8 @@ function RecurringPaymentFormDialog({ open, onClose, onSave, initial, saving }: 
     Number(form.amount) > 0 &&
     form.startDate &&
     form.nextDueDate &&
-    new Date(form.nextDueDate) >= new Date(form.startDate)
+    new Date(form.nextDueDate) >= new Date(form.startDate) &&
+    form.clientId
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -151,17 +143,17 @@ function RecurringPaymentFormDialog({ open, onClose, onSave, initial, saving }: 
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose() }}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{initial ? 'Edit Recurring Payment' : 'Add Recurring Payment'}</DialogTitle>
+          <DialogTitle>{initial ? 'Edit Recurring Invoice' : 'Add Recurring Invoice'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           {/* Description */}
           <div className="space-y-1.5">
-            <Label htmlFor="rp-desc">Description <span className="text-destructive">*</span></Label>
+            <Label htmlFor="ri-desc">Description <span className="text-destructive">*</span></Label>
             <Input
-              id="rp-desc"
+              id="ri-desc"
               value={form.description}
               onChange={(e) => set('description', e.target.value)}
-              placeholder="e.g. Monthly office rent"
+              placeholder="e.g. Monthly retainer invoice"
               required
             />
           </div>
@@ -169,9 +161,9 @@ function RecurringPaymentFormDialog({ open, onClose, onSave, initial, saving }: 
           {/* Amount + Billing Cycle */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="rp-amount">Amount <span className="text-destructive">*</span></Label>
+              <Label htmlFor="ri-amount">Amount <span className="text-destructive">*</span></Label>
               <Input
-                id="rp-amount"
+                id="ri-amount"
                 type="number"
                 min="0"
                 step="0.01"
@@ -199,9 +191,9 @@ function RecurringPaymentFormDialog({ open, onClose, onSave, initial, saving }: 
           {/* Start Date + Next Due Date */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="rp-start">Start Date <span className="text-destructive">*</span></Label>
+              <Label htmlFor="ri-start">Start Date <span className="text-destructive">*</span></Label>
               <Input
-                id="rp-start"
+                id="ri-start"
                 type="date"
                 value={form.startDate}
                 onChange={(e) => set('startDate', e.target.value)}
@@ -209,9 +201,9 @@ function RecurringPaymentFormDialog({ open, onClose, onSave, initial, saving }: 
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="rp-due">Next Due Date <span className="text-destructive">*</span></Label>
+              <Label htmlFor="ri-due">Next Due Date <span className="text-destructive">*</span></Label>
               <Input
-                id="rp-due"
+                id="ri-due"
                 type="date"
                 value={form.nextDueDate}
                 min={form.startDate}
@@ -221,16 +213,18 @@ function RecurringPaymentFormDialog({ open, onClose, onSave, initial, saving }: 
             </div>
           </div>
 
-          {/* Category */}
+          {/* Client (required) */}
           <div className="space-y-1.5">
-            <Label>Category</Label>
-            <Select value={form.category} onValueChange={(v) => set('category', v as ExpenseCategory)}>
+            <Label>Client <span className="text-destructive">*</span></Label>
+            <Select value={form.clientId} onValueChange={(v) => set('clientId', v)}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Select a client" />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORIES.map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                {clients.filter((c) => !c.isArchived).map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}{c.companyName ? ` — ${c.companyName}` : ''}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -257,9 +251,9 @@ function RecurringPaymentFormDialog({ open, onClose, onSave, initial, saving }: 
 
           {/* Notes */}
           <div className="space-y-1.5">
-            <Label htmlFor="rp-notes">Notes</Label>
+            <Label htmlFor="ri-notes">Notes</Label>
             <textarea
-              id="rp-notes"
+              id="ri-notes"
               value={form.notes}
               onChange={(e) => set('notes', e.target.value)}
               placeholder="Optional notes…"
@@ -271,7 +265,7 @@ function RecurringPaymentFormDialog({ open, onClose, onSave, initial, saving }: 
           <DialogFooter className="pt-2">
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
             <Button type="submit" disabled={saving || !valid}>
-              {saving ? 'Saving…' : initial ? 'Save Changes' : 'Add Payment'}
+              {saving ? 'Saving…' : initial ? 'Save Changes' : 'Add Invoice'}
             </Button>
           </DialogFooter>
         </form>
@@ -282,34 +276,39 @@ function RecurringPaymentFormDialog({ open, onClose, onSave, initial, saving }: 
 
 // ── page ──────────────────────────────────────────────────────────────────────
 
-export default function RecurringPaymentsPage() {
+export default function RecurringInvoicesPage() {
   const { selectedBusiness } = useBusiness()
   const currency = selectedBusiness?.currencyCode ?? 'ZAR'
 
-  const [payments, setPayments] = useState<RecurringPayment[]>([])
+  const [invoices, setInvoices] = useState<RecurringInvoice[]>([])
+  const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
   const [cycleFilter, setCycleFilter] = useState('All')
   const [statusFilter, setStatusFilter] = useState('All')
 
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [editTarget, setEditTarget] = useState<RecurringPayment | null>(null)
+  const [editTarget, setEditTarget] = useState<RecurringInvoice | null>(null)
   const [saving, setSaving] = useState(false)
 
   // ── fetch ──
   useEffect(() => {
     if (!selectedBusiness) return
     setLoading(true)
-    recurringPaymentsApi.getAll(selectedBusiness.id)
-      .then((rpData) => {
-        setPayments(rpData)
+    Promise.all([
+      recurringInvoicesApi.getAll(selectedBusiness.id),
+      clientsApi.getAll(selectedBusiness.id),
+    ])
+      .then(([riData, clientData]) => {
+        setInvoices(riData)
+        setClients(clientData)
       })
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [selectedBusiness])
 
   // ── derived ──
-  const active = payments.filter((p) => p.isActive)
+  const active = invoices.filter((p) => p.isActive)
 
   const monthlyTotal = active.reduce(
     (sum, p) => sum + monthlyEquivalent(p.amount, p.billingCycle),
@@ -319,20 +318,22 @@ export default function RecurringPaymentsPage() {
   const dueSoon = active.filter((p) => p.daysUntilNextDue <= 7).length
 
   const summaryCards = [
-    { label: 'Active Payments', value: String(active.length), sub: `${payments.length} total` },
-    { label: 'Monthly Commitment', value: fmt(monthlyTotal, currency), sub: 'Across active payments' },
-    { label: 'Yearly Commitment', value: fmt(monthlyTotal * 12, currency), sub: 'Projected annual spend' },
+    { label: 'Active Invoices', value: String(active.length), sub: `${invoices.length} total` },
+    { label: 'Monthly Expected Income', value: fmt(monthlyTotal, currency), sub: 'Across active invoices' },
+    { label: 'Yearly Expected Income', value: fmt(monthlyTotal * 12, currency), sub: 'Projected annual income' },
     {
       label: 'Due Within 7 Days',
       value: String(dueSoon),
-      sub: dueSoon > 0 ? 'Payments coming up' : 'Nothing due soon',
+      sub: dueSoon > 0 ? 'Invoices coming up' : 'Nothing due soon',
       highlight: dueSoon > 0,
     },
   ]
 
-  const filtered = payments.filter((p) => {
+  const filtered = invoices.filter((p) => {
     const q = search.toLowerCase()
-    const matchSearch = p.description.toLowerCase().includes(q)
+    const matchSearch =
+      p.description.toLowerCase().includes(q) ||
+      (p.clientName ?? '').toLowerCase().includes(q)
     const matchCycle = cycleFilter === 'All' || p.billingCycle === cycleFilter
     const matchStatus =
       statusFilter === 'All' ||
@@ -343,7 +344,7 @@ export default function RecurringPaymentsPage() {
 
   // ── actions ──
   const openAdd = () => { setEditTarget(null); setDialogOpen(true) }
-  const openEdit = (p: RecurringPayment) => { setEditTarget(p); setDialogOpen(true) }
+  const openEdit = (p: RecurringInvoice) => { setEditTarget(p); setDialogOpen(true) }
   const closeDialog = () => { setDialogOpen(false); setEditTarget(null) }
 
   const handleSave = async (data: FormData) => {
@@ -353,29 +354,29 @@ export default function RecurringPaymentsPage() {
     const dueUtc = `${data.nextDueDate}T00:00:00Z`
     try {
       if (editTarget) {
-        const updated = await recurringPaymentsApi.update(selectedBusiness.id, editTarget.id, {
+        const updated = await recurringInvoicesApi.update(selectedBusiness.id, editTarget.id, {
           description: data.description,
           amount: Number(data.amount),
           billingCycle: data.billingCycle,
           nextDueDate: dueUtc,
           isActive: data.isActive,
-          category: data.category,
+          clientId: data.clientId,
           notes: data.notes || undefined,
         })
-        setPayments((prev) => prev.map((p) => p.id === updated.id ? updated : p))
-        toast.success('Payment updated.')
+        setInvoices((prev) => prev.map((p) => p.id === updated.id ? updated : p))
+        toast.success('Invoice updated.')
       } else {
-        const created = await recurringPaymentsApi.create(selectedBusiness.id, {
+        const created = await recurringInvoicesApi.create(selectedBusiness.id, {
           description: data.description,
           amount: Number(data.amount),
           billingCycle: data.billingCycle,
           startDate: startUtc,
           nextDueDate: dueUtc,
-          category: data.category,
+          clientId: data.clientId,
           notes: data.notes || undefined,
         })
-        setPayments((prev) => [created, ...prev])
-        toast.success('Payment added.')
+        setInvoices((prev) => [created, ...prev])
+        toast.success('Invoice added.')
       }
       closeDialog()
     } catch (err: unknown) {
@@ -388,15 +389,15 @@ export default function RecurringPaymentsPage() {
     }
   }
 
-  const handleDelete = async (p: RecurringPayment) => {
+  const handleDelete = async (p: RecurringInvoice) => {
     if (!selectedBusiness) return
     if (!window.confirm(`Delete "${p.description}"? This cannot be undone.`)) return
     try {
-      await recurringPaymentsApi.delete(selectedBusiness.id, p.id)
-      setPayments((prev) => prev.filter((x) => x.id !== p.id))
-      toast.success('Payment deleted.')
+      await recurringInvoicesApi.delete(selectedBusiness.id, p.id)
+      setInvoices((prev) => prev.filter((x) => x.id !== p.id))
+      toast.success('Invoice deleted.')
     } catch (err) {
-      toast.error('Could not delete payment. Please try again.')
+      toast.error('Could not delete invoice. Please try again.')
       console.error(err)
     }
   }
@@ -410,7 +411,7 @@ export default function RecurringPaymentsPage() {
           <div className="text-sm text-muted-foreground">
             <span className="text-foreground font-medium">{selectedBusiness?.name ?? 'Dashboard'}</span>
             {' / '}
-            <span>Recurring Payments</span>
+            <span>Recurring Invoices</span>
           </div>
         </div>
         <div className="text-sm text-muted-foreground">
@@ -422,12 +423,12 @@ export default function RecurringPaymentsPage() {
         {/* Page heading */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">Recurring Payments</h1>
-            <p className="text-sm text-muted-foreground">Manage subscriptions and repeat obligations</p>
+            <h1 className="text-2xl font-semibold text-foreground">Recurring Invoices</h1>
+            <p className="text-sm text-muted-foreground">Auto-generate invoices on a schedule</p>
           </div>
           <Button onClick={openAdd} className="gap-2">
             <Plus size={16} />
-            Add Payment
+            Add Invoice
           </Button>
         </div>
 
@@ -450,14 +451,14 @@ export default function RecurringPaymentsPage() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between gap-4 flex-wrap">
-              <CardTitle className="text-base font-semibold">All Recurring Payments</CardTitle>
+              <CardTitle className="text-base font-semibold">All Recurring Invoices</CardTitle>
               <div className="flex items-center gap-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
                   <input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search payments…"
+                    placeholder="Search invoices…"
                     className="pl-8 pr-3 py-1.5 rounded-lg bg-secondary text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-ring w-52"
                   />
                 </div>
@@ -490,7 +491,7 @@ export default function RecurringPaymentsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Description</TableHead>
-                  <TableHead>Category</TableHead>
+                  <TableHead>Client</TableHead>
                   <TableHead>Cycle</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Next Due</TableHead>
@@ -505,8 +506,8 @@ export default function RecurringPaymentsPage() {
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-10 text-muted-foreground text-sm">
                       {search || cycleFilter !== 'All' || statusFilter !== 'All'
-                        ? 'No payments match your filters.'
-                        : 'No recurring payments yet. Add your first one.'}
+                        ? 'No invoices match your filters.'
+                        : 'No recurring invoices yet. Add your first one.'}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -514,14 +515,12 @@ export default function RecurringPaymentsPage() {
                     <TableRow key={p.id} className={!p.isActive ? 'opacity-50' : ''}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
-                          <RefreshCw size={15} className="text-muted-foreground flex-shrink-0" />
+                          <FileClock size={15} className="text-muted-foreground flex-shrink-0" />
                           <span className="truncate max-w-[200px]">{p.description}</span>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className={CATEGORY_STYLES[p.category]}>
-                          {p.category}
-                        </Badge>
+                      <TableCell className="text-muted-foreground">
+                        {p.clientName ?? <span className="text-muted-foreground/50">—</span>}
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary" className={CYCLE_STYLES[p.billingCycle]}>
@@ -584,12 +583,13 @@ export default function RecurringPaymentsPage() {
         </Card>
       </div>
 
-      <RecurringPaymentFormDialog
+      <RecurringInvoiceFormDialog
         key={dialogOpen ? (editTarget?.id ?? 'new') : 'closed'}
         open={dialogOpen}
         onClose={closeDialog}
         onSave={handleSave}
         initial={editTarget}
+        clients={clients}
         saving={saving}
       />
     </div>

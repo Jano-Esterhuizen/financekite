@@ -6,7 +6,8 @@ import { businessesApi } from '@/lib/api/businesses'
 import { invoicesApi } from '@/lib/api/invoices'
 import { expensesApi } from '@/lib/api/expenses'
 import { recurringPaymentsApi } from '@/lib/api/recurring-payments'
-import type { FinancialSummary, Invoice, Expense, RecurringPayment } from '@/lib/types'
+import { recurringInvoicesApi } from '@/lib/api/recurring-invoices'
+import type { FinancialSummary, Invoice, Expense, RecurringPayment, RecurringInvoice } from '@/lib/types'
 import MetricCard from '@/components/dashboard/MetricCard'
 import RevenueChart from '@/components/dashboard/RevenueChart'
 import ExpensesDonut from '@/components/dashboard/ExpensesDonut'
@@ -51,6 +52,7 @@ export default function DashboardPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [recurringPayments, setRecurringPayments] = useState<RecurringPayment[]>([])
+  const [recurringInvoices, setRecurringInvoices] = useState<RecurringInvoice[]>([])
   const [loadedForId, setLoadedForId] = useState<string | null>(null)
 
   const loading = !!selectedBusiness && loadedForId !== selectedBusiness.id
@@ -66,13 +68,15 @@ export default function DashboardPage() {
       invoicesApi.getAll(id),
       expensesApi.getAll(id),
       recurringPaymentsApi.getAll(id),
+      recurringInvoicesApi.getAll(id),
     ])
-      .then(([summaryData, invoiceData, expenseData, recurringData]) => {
+      .then(([summaryData, invoiceData, expenseData, recurringData, recurringInvoiceData]) => {
         if (cancelled) return
         setSummary(summaryData)
         setInvoices(invoiceData)
         setExpenses(expenseData)
         setRecurringPayments(recurringData)
+        setRecurringInvoices(recurringInvoiceData)
         setLoadedForId(id)
       })
       .catch((err) => {
@@ -185,7 +189,7 @@ export default function DashboardPage() {
           ) : (
             <>
               <ExpensesDonut expenses={expenses} currencyCode={currency} />
-              <UpcomingPayments recurringPayments={recurringPayments} currencyCode={currency} />
+              <UpcomingPayments recurringPayments={recurringPayments} recurringInvoices={recurringInvoices} currencyCode={currency} />
             </>
           )}
         </div>

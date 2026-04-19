@@ -10,6 +10,7 @@ import {
   FileText,
   Receipt,
   RefreshCw,
+  FileClock,
   Settings,
   LogOut,
   ChevronDown,
@@ -51,6 +52,7 @@ const navSections = [
       { label: 'Clients', href: '/dashboard/clients', icon: Users },
       { label: 'Invoices', href: '/dashboard/invoices', icon: FileText },
       { label: 'Recurring Payments', href: '/dashboard/recurring-payments', icon: RefreshCw },
+      { label: 'Recurring Invoices', href: '/dashboard/recurring-invoices', icon: FileClock },
     ],
   },
 ]

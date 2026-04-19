@@ -17,6 +17,7 @@ public class Business : AuditableEntity
     public ICollection<Client> Clients { get; set; } = [];
     public ICollection<Expense> Expenses { get; set; } = [];
     public ICollection<RecurringPayment> RecurringPayments { get; set; } = [];
+    public ICollection<RecurringInvoice> RecurringInvoices { get; set; } = [];
 
     //Why ICollection and not List? ICollection is an interface
     //it describes what you can do (add, remove, count) without locking you into a specific implementation

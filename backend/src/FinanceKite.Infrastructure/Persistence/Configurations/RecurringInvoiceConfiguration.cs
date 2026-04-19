@@ -6,9 +6,9 @@ using FinanceKite.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-public class RecurringPaymentConfiguration : IEntityTypeConfiguration<RecurringPayment>
+public class RecurringInvoiceConfiguration : IEntityTypeConfiguration<RecurringInvoice>
 {
-    public void Configure(EntityTypeBuilder<RecurringPayment> builder)
+    public void Configure(EntityTypeBuilder<RecurringInvoice> builder)
     {
         builder.HasKey(r => r.Id);
 
@@ -23,15 +23,16 @@ public class RecurringPaymentConfiguration : IEntityTypeConfiguration<RecurringP
             .HasConversion<string>()
             .HasMaxLength(20);
 
-        builder.Property(r => r.Category)
-            .HasConversion<string>()
-            .HasMaxLength(20);
-
         builder.Property(r => r.Notes)
             .HasMaxLength(1000);
 
         builder.Ignore(r => r.DaysUntilNextDue);
 
         builder.HasIndex(r => new { r.IsActive, r.NextDueDate });
+
+        builder.HasOne(r => r.Client)
+            .WithMany(c => c.RecurringInvoices)
+            .HasForeignKey(r => r.ClientId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

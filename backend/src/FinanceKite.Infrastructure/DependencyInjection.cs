@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<IInvoiceRepository, InvoiceRepository>();
         services.AddScoped<IExpenseRepository, ExpenseRepository>();
         services.AddScoped<IRecurringPaymentRepository, RecurringPaymentRepository>();
+        services.AddScoped<IRecurringInvoiceRepository, RecurringInvoiceRepository>();
 
         // Resend email client
         services.AddOptions();

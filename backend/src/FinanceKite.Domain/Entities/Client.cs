@@ -20,5 +20,5 @@ public class Client : AuditableEntity
     public Business Business { get; set; } = null!;
     public ICollection<Invoice> Invoices { get; set; } = [];
     public ICollection<Expense> Expenses { get; set; } = [];        // For client-linked expenses
-    public ICollection<RecurringPayment> RecurringPayments { get; set; } = [];
+    public ICollection<RecurringInvoice> RecurringInvoices { get; set; } = [];
 }

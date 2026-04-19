@@ -58,7 +58,22 @@ export interface Expense {
 export interface RecurringPayment {
   id: string
   businessId: string
-  clientId: string | null
+  description: string
+  amount: number
+  billingCycle: 'Weekly' | 'Monthly' | 'Yearly'
+  startDate: string
+  nextDueDate: string
+  isActive: boolean
+  category: 'Hosting' | 'Domain' | 'Tools' | 'Service' | 'Other'
+  daysUntilNextDue: number
+  notes: string | null
+  createdAt: string
+}
+
+export interface RecurringInvoice {
+  id: string
+  businessId: string
+  clientId: string
   clientName: string | null
   description: string
   amount: number

@@ -14,7 +14,7 @@ export const recurringPaymentsApi = {
     billingCycle: string
     startDate: string
     nextDueDate: string
-    clientId?: string
+    category: string
     notes?: string
   }) => api.post<RecurringPayment>(
     `/api/businesses/${businessId}/recurring-payments`, data
@@ -26,7 +26,7 @@ export const recurringPaymentsApi = {
     billingCycle: string
     nextDueDate: string
     isActive: boolean
-    clientId?: string
+    category: string
     notes?: string
   }) => api.put<RecurringPayment>(
     `/api/businesses/${businessId}/recurring-payments/${id}`, data

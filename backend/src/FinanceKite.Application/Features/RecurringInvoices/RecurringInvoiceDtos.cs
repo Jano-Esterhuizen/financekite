@@ -1,39 +1,40 @@
 using System;
 
-namespace FinanceKite.Application.Features.RecurringPayments;
+namespace FinanceKite.Application.Features.RecurringInvoices;
 
 using FinanceKite.Domain.Entities;
 
-public record CreateRecurringPaymentRequest(
+public record CreateRecurringInvoiceRequest(
     string Description,
     decimal Amount,
     BillingCycle BillingCycle,
     DateTime StartDate,
     DateTime NextDueDate,
-    ExpenseCategory Category,
+    Guid ClientId,
     string? Notes
 );
 
-public record UpdateRecurringPaymentRequest(
+public record UpdateRecurringInvoiceRequest(
     string Description,
     decimal Amount,
     BillingCycle BillingCycle,
     DateTime NextDueDate,
     bool IsActive,
-    ExpenseCategory Category,
+    Guid ClientId,
     string? Notes
 );
 
-public record RecurringPaymentResponse(
+public record RecurringInvoiceResponse(
     Guid Id,
     Guid BusinessId,
+    Guid ClientId,
+    string? ClientName,
     string Description,
     decimal Amount,
     BillingCycle BillingCycle,
     DateTime StartDate,
     DateTime NextDueDate,
     bool IsActive,
-    ExpenseCategory Category,
     int DaysUntilNextDue,
     string? Notes,
     DateTime CreatedAt

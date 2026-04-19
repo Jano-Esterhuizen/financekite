@@ -1,31 +1,31 @@
 using System;
 
-namespace FinanceKite.Application.Features.RecurringPayments;
+namespace FinanceKite.Application.Features.RecurringInvoices;
 
 using FinanceKite.Application.Common.Exceptions;
 using FinanceKite.Application.Common.Interfaces;
 using FinanceKite.Domain.Entities;
 using FluentValidation;
 
-public class RecurringPaymentService(
-    IRecurringPaymentRepository recurringPaymentRepository,
+public class RecurringInvoiceService(
+    IRecurringInvoiceRepository recurringInvoiceRepository,
     IBusinessRepository businessRepository,
     IUnitOfWork unitOfWork,
-    IValidator<CreateRecurringPaymentRequest> createValidator,
-    IValidator<UpdateRecurringPaymentRequest> updateValidator)
+    IValidator<CreateRecurringInvoiceRequest> createValidator,
+    IValidator<UpdateRecurringInvoiceRequest> updateValidator)
 {
-    public async Task<IReadOnlyList<RecurringPaymentResponse>> GetAllAsync(
+    public async Task<IReadOnlyList<RecurringInvoiceResponse>> GetAllAsync(
         Guid businessId,
         Guid userId,
         CancellationToken cancellationToken = default)
     {
         await VerifyBusinessOwnershipAsync(businessId, userId, cancellationToken);
 
-        var payments = await recurringPaymentRepository.GetAllByBusinessIdAsync(businessId, cancellationToken);
-        return payments.Select(p => p.ToResponse()).ToList();
+        var invoices = await recurringInvoiceRepository.GetAllByBusinessIdAsync(businessId, cancellationToken);
+        return invoices.Select(i => i.ToResponse()).ToList();
     }
 
-    public async Task<RecurringPaymentResponse> GetByIdAsync(
+    public async Task<RecurringInvoiceResponse> GetByIdAsync(
         Guid id,
         Guid businessId,
         Guid userId,
@@ -33,66 +33,66 @@ public class RecurringPaymentService(
     {
         await VerifyBusinessOwnershipAsync(businessId, userId, cancellationToken);
 
-        var payment = await recurringPaymentRepository.GetByIdAsync(id, businessId, cancellationToken)
-            ?? throw new NotFoundException(nameof(RecurringPayment), id);
+        var invoice = await recurringInvoiceRepository.GetByIdAsync(id, businessId, cancellationToken)
+            ?? throw new NotFoundException(nameof(RecurringInvoice), id);
 
-        return payment.ToResponse();
+        return invoice.ToResponse();
     }
 
-    public async Task<RecurringPaymentResponse> CreateAsync(
+    public async Task<RecurringInvoiceResponse> CreateAsync(
         Guid businessId,
         Guid userId,
-        CreateRecurringPaymentRequest request,
+        CreateRecurringInvoiceRequest request,
         CancellationToken cancellationToken = default)
     {
         await VerifyBusinessOwnershipAsync(businessId, userId, cancellationToken);
         await ValidateAsync(createValidator, request, cancellationToken);
 
-        var payment = new RecurringPayment
+        var invoice = new RecurringInvoice
         {
             BusinessId = businessId,
+            ClientId = request.ClientId,
             Description = request.Description,
             Amount = request.Amount,
             BillingCycle = request.BillingCycle,
             StartDate = request.StartDate,
             NextDueDate = request.NextDueDate,
-            Category = request.Category,
             Notes = request.Notes
         };
 
-        await recurringPaymentRepository.CreateAsync(payment, cancellationToken);
+        await recurringInvoiceRepository.CreateAsync(invoice, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var created = await recurringPaymentRepository.GetByIdAsync(payment.Id, businessId, cancellationToken);
+        var created = await recurringInvoiceRepository.GetByIdAsync(invoice.Id, businessId, cancellationToken);
         return created!.ToResponse();
     }
 
-    public async Task<RecurringPaymentResponse> UpdateAsync(
+    public async Task<RecurringInvoiceResponse> UpdateAsync(
         Guid id,
         Guid businessId,
         Guid userId,
-        UpdateRecurringPaymentRequest request,
+        UpdateRecurringInvoiceRequest request,
         CancellationToken cancellationToken = default)
     {
         await VerifyBusinessOwnershipAsync(businessId, userId, cancellationToken);
         await ValidateAsync(updateValidator, request, cancellationToken);
 
-        var payment = await recurringPaymentRepository.GetByIdAsync(id, businessId, cancellationToken)
-            ?? throw new NotFoundException(nameof(RecurringPayment), id);
+        var invoice = await recurringInvoiceRepository.GetByIdAsync(id, businessId, cancellationToken)
+            ?? throw new NotFoundException(nameof(RecurringInvoice), id);
 
-        payment.Description = request.Description;
-        payment.Amount = request.Amount;
-        payment.BillingCycle = request.BillingCycle;
-        payment.NextDueDate = request.NextDueDate;
-        payment.IsActive = request.IsActive;
-        payment.Category = request.Category;
-        payment.Notes = request.Notes;
-        payment.UpdatedAt = DateTime.UtcNow;
+        invoice.Description = request.Description;
+        invoice.Amount = request.Amount;
+        invoice.BillingCycle = request.BillingCycle;
+        invoice.NextDueDate = request.NextDueDate;
+        invoice.IsActive = request.IsActive;
+        invoice.ClientId = request.ClientId;
+        invoice.Notes = request.Notes;
+        invoice.UpdatedAt = DateTime.UtcNow;
 
-        await recurringPaymentRepository.UpdateAsync(payment, cancellationToken);
+        await recurringInvoiceRepository.UpdateAsync(invoice, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return payment.ToResponse();
+        return invoice.ToResponse();
     }
 
     public async Task DeleteAsync(
@@ -103,10 +103,10 @@ public class RecurringPaymentService(
     {
         await VerifyBusinessOwnershipAsync(businessId, userId, cancellationToken);
 
-        var payment = await recurringPaymentRepository.GetByIdAsync(id, businessId, cancellationToken)
-            ?? throw new NotFoundException(nameof(RecurringPayment), id);
+        var invoice = await recurringInvoiceRepository.GetByIdAsync(id, businessId, cancellationToken)
+            ?? throw new NotFoundException(nameof(RecurringInvoice), id);
 
-        await recurringPaymentRepository.DeleteAsync(payment.Id, businessId, cancellationToken);
+        await recurringInvoiceRepository.DeleteAsync(invoice.Id, businessId, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 

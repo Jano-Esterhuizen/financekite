@@ -10,23 +10,20 @@ public class RecurringPaymentRepository(ApplicationDbContext context) : IRecurri
 {
     public async Task<RecurringPayment?> GetByIdAsync(Guid id, Guid businessId, CancellationToken cancellationToken = default)
         => await context.RecurringPayments
-            .Include(r => r.Client)
             .FirstOrDefaultAsync(r => r.Id == id && r.BusinessId == businessId, cancellationToken);
 
     public async Task<IReadOnlyList<RecurringPayment>> GetAllByBusinessIdAsync(Guid businessId, CancellationToken cancellationToken = default)
         => await context.RecurringPayments
-            .Include(r => r.Client)
             .Where(r => r.BusinessId == businessId)
             .OrderBy(r => r.NextDueDate)
             .ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<RecurringPayment>> GetDueForReminderAsync(int daysAhead, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<RecurringPayment>> GetDueAsync(CancellationToken cancellationToken = default)
     {
-        var cutoff = DateTime.UtcNow.Date.AddDays(daysAhead);
+        var today = DateTime.UtcNow.Date;
         return await context.RecurringPayments
-            .Include(r => r.Client)
             .Include(r => r.Business)
-            .Where(r => r.IsActive && r.NextDueDate.Date <= cutoff)
+            .Where(r => r.IsActive && r.NextDueDate.Date <= today)
             .OrderBy(r => r.NextDueDate)
             .ToListAsync(cancellationToken);
     }

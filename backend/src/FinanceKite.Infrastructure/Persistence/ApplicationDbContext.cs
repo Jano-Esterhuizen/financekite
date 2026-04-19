@@ -14,6 +14,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<RecurringPayment> RecurringPayments => Set<RecurringPayment>();
+    public DbSet<RecurringInvoice> RecurringInvoices => Set<RecurringInvoice>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

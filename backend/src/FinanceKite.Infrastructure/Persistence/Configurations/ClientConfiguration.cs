@@ -44,12 +44,11 @@ public class ClientConfiguration : IEntityTypeConfiguration<Client>
             .OnDelete(DeleteBehavior.SetNull)
             .IsRequired(false);
 
-        // One Client has many RecurringPayments (optional link)
-        builder.HasMany(c => c.RecurringPayments)
+        // One Client has many RecurringInvoices
+        builder.HasMany(c => c.RecurringInvoices)
             .WithOne(r => r.Client)
             .HasForeignKey(r => r.ClientId)
-            .OnDelete(DeleteBehavior.SetNull)
-            .IsRequired(false);
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
 

@@ -84,8 +84,9 @@ FinanceKite is a full-stack SaaS application that unifies invoicing, expense tra
 - **Multi-business management** — Create and switch between multiple businesses, each with its own currency (ZAR, USD, EUR, GBP), clients, and financial data.
 - **Invoice lifecycle tracking** — Manage invoices through Pending → Overdue → Paid / Loss states, upload invoice documents, and view overdue alerts on the dashboard.
 - **Expense tracking with proof uploads** — Log expenses by category (Hosting, Domain, Tools, Service, Other) and attach proof-of-payment files stored in Supabase Storage.
-- **Recurring payment automation** — Schedule weekly, monthly, or yearly payments with automatic email reminders sent via Resend before the due date.
-- **Financial dashboard** — Revenue chart, expenses donut breakdown, overdue invoices list, and upcoming payments — all in one view with real-time data.
+- **Recurring payments (expenses)** — Schedule weekly, monthly, or yearly expense payments with a category. When a payment's due date arrives, the scheduler automatically creates an Expense record and advances to the next cycle.
+- **Recurring invoices (income)** — Schedule recurring client invoices. When due, the scheduler auto-generates an Invoice with Pending status, emails the client a reminder, and advances to the next cycle.
+- **Financial dashboard** — Revenue chart, expenses donut breakdown, overdue invoices list, and upcoming recurring items (both payments and invoices) — all in one view with real-time data.
 - **Client health metrics** — Track outstanding balances per client to identify who owes what and flag at-risk accounts.
 - **Dark / light theme** — System-aware theme toggle powered by `next-themes`, with HSL-based custom properties for consistent styling.
 - **API rate limiting** — Built-in .NET rate limiter with a global 60 req/min policy and a stricter 10 req/min policy on file upload endpoints, returning `429 Too Many Requests` on excess traffic.
@@ -124,9 +125,9 @@ Every database query is scoped by `UserId` extracted from the JWT. The `BaseCont
 ### Background Scheduler
 
 `FinancialSchedulerService` is a hosted `BackgroundService` that runs on a configurable interval (default: every hour). Each cycle it:
-1. Marks pending invoices past their due date as **Overdue**.
-2. Sends payment reminder emails for recurring payments due within the configured window (default: 7 days).
-3. Advances reminded payments to their next billing cycle.
+1. **Marks overdue invoices** — Pending invoices past their due date are set to Overdue.
+2. **Processes recurring payments** — Due payments auto-generate an Expense record (with the payment's category) and advance to the next billing cycle.
+3. **Processes recurring invoices** — Due recurring invoices auto-generate an Invoice (status: Pending), send a reminder email to the client via Resend, and advance to the next billing cycle.
 
 ### Rate Limiting
 
@@ -160,6 +161,8 @@ financekite/
 │   │   │   ├── (auth)/                 # Sign-in, sign-up, OAuth callback
 │   │   │   ├── (landing)/             # Public landing page
 │   │   │   └── dashboard/             # Protected dashboard routes
+│   │   │       ├── recurring-payments/ # Recurring expense management
+│   │   │       └── recurring-invoices/ # Recurring income management
 │   │   ├── components/
 │   │   │   ├── ui/                    # shadcn/ui components
 │   │   │   ├── dashboard/            # Dashboard widgets & charts

@@ -7,6 +7,7 @@ using FinanceKite.Application.Features.Businesses;
 using FinanceKite.Application.Features.Clients;
 using FinanceKite.Application.Features.Expenses;
 using FinanceKite.Application.Features.Invoices;
+using FinanceKite.Application.Features.RecurringInvoices;
 using FinanceKite.Application.Features.RecurringPayments;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<InvoiceService>();
         services.AddScoped<ExpenseService>();
         services.AddScoped<RecurringPaymentService>();
+        services.AddScoped<RecurringInvoiceService>();
 
         return services;
     }
