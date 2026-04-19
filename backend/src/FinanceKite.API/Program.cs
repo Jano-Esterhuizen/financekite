@@ -80,12 +80,14 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseHttpsRedirection();
 }
 
 // Global exception handler — must be first in the pipeline
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-app.UseHttpsRedirection();
+// Health check for Render (and other hosting platforms)
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 app.UseCors("FrontendPolicy");
 
 // Auth middleware — order matters: Authentication before Authorization
