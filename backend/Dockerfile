@@ -1,5 +1,5 @@
 # ── Build Stage ──────────────────────────────────────────────────────────────
-FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0-bookworm-slim AS build
 WORKDIR /src
 
 # Copy solution and project files first (NuGet restore layer caching)
@@ -19,13 +19,13 @@ RUN dotnet publish src/FinanceKite.API/FinanceKite.API.csproj \
     --no-restore
 
 # ── Runtime Stage ────────────────────────────────────────────────────────────
-FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-bookworm-slim AS runtime
 WORKDIR /app
 
 # Memory-optimized settings for Render's 512MB limit
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=true \
-    DOTNET_gcServer=0 \
-    DOTNET_GCHeapHardLimit=0x12C00000 \
+ENV DOTNET_gcServer=0 \
+    DOTNET_GCHeapHardLimit=0xC800000 \
+    DOTNET_GCConserveMemory=9 \
     DOTNET_EnableDiagnostics=0 \
     ASPNETCORE_ENVIRONMENT=Production \
     PORT=10000
