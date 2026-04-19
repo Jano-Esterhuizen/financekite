@@ -4,6 +4,7 @@ namespace FinanceKite.API.Controllers;
 
 using FinanceKite.Application.Features.Expenses;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 [Route("api/businesses/{businessId:guid}/expenses")]
 public class ExpensesController(ExpenseService expenseService) : BaseController
@@ -44,6 +45,7 @@ public class ExpensesController(ExpenseService expenseService) : BaseController
     }
 
     [HttpPost("{id:guid}/upload-proof")]
+    [EnableRateLimiting("uploads")]
     public async Task<IActionResult> UploadProofOfPayment(
         Guid businessId,
         Guid id,

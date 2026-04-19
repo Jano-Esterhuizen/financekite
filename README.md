@@ -88,6 +88,7 @@ FinanceKite is a full-stack SaaS application that unifies invoicing, expense tra
 - **Financial dashboard** — Revenue chart, expenses donut breakdown, overdue invoices list, and upcoming payments — all in one view with real-time data.
 - **Client health metrics** — Track outstanding balances per client to identify who owes what and flag at-risk accounts.
 - **Dark / light theme** — System-aware theme toggle powered by `next-themes`, with HSL-based custom properties for consistent styling.
+- **API rate limiting** — Built-in .NET rate limiter with a global 60 req/min policy and a stricter 10 req/min policy on file upload endpoints, returning `429 Too Many Requests` on excess traffic.
 
 ---
 
@@ -126,6 +127,17 @@ Every database query is scoped by `UserId` extracted from the JWT. The `BaseCont
 1. Marks pending invoices past their due date as **Overdue**.
 2. Sends payment reminder emails for recurring payments due within the configured window (default: 7 days).
 3. Advances reminded payments to their next billing cycle.
+
+### Rate Limiting
+
+The API uses ASP.NET Core's built-in rate limiting middleware to protect against abuse:
+
+| Policy | Limit | Scope | Applied To |
+|---|---|---|---|
+| `fixed` | 60 requests / minute | Per IP | All controller endpoints |
+| `uploads` | 10 requests / minute | Per IP | File upload endpoints only |
+
+Excess requests receive a `429 Too Many Requests` response with a JSON body. Rate limiting runs after CORS but before authentication in the middleware pipeline.
 
 ### Project Structure
 

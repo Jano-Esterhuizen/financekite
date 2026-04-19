@@ -4,6 +4,7 @@ namespace FinanceKite.API.Controllers;
 
 using FinanceKite.Application.Features.Invoices;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 [Route("api/businesses/{businessId:guid}/invoices")]
 public class InvoicesController(InvoiceService invoiceService) : BaseController
@@ -51,6 +52,7 @@ public class InvoicesController(InvoiceService invoiceService) : BaseController
     }
 
     [HttpPost("{id:guid}/upload-document")]
+    [EnableRateLimiting("uploads")]
     public async Task<IActionResult> UploadDocument(
         Guid businessId,
         Guid id,

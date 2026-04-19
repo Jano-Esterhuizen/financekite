@@ -2,8 +2,10 @@ using FinanceKite.API.Middleware;
 using FinanceKite.Application;
 using FinanceKite.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Builder;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -72,6 +74,40 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+// Rate limiting — protect API from abuse
+builder.Services.AddRateLimiter(options =>
+{
+    // Return 429 Too Many Requests with a Retry-After header
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // Global policy: 60 requests per minute per IP
+    options.AddFixedWindowLimiter("fixed", opt =>
+    {
+        opt.PermitLimit = 60;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueLimit = 0;
+    });
+
+    // Stricter policy for file uploads: 10 per minute per IP
+    options.AddFixedWindowLimiter("uploads", opt =>
+    {
+        opt.PermitLimit = 10;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueLimit = 0;
+    });
+
+    // Resolve client IP for partitioning
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsJsonAsync(new
+        {
+            status = 429,
+            title = "Too many requests. Please try again later."
+        }, cancellationToken);
+    };
+});
+
 // ── Pipeline ─────────────────────────────────────────────────────────────────
 
 var app = builder.Build();
@@ -89,12 +125,13 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 // Health check for Render (and other hosting platforms)
 app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 app.UseCors("FrontendPolicy");
+app.UseRateLimiter();
 
 // Auth middleware — order matters: Authentication before Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+app.MapControllers().RequireRateLimiting("fixed");
 
 app.Run();
 
