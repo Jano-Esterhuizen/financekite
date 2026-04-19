@@ -247,6 +247,54 @@ curl http://localhost:10000/health
 
 > **Note:** `NEXT_PUBLIC_` variables are embedded at build time. After changing them, you must redeploy for changes to take effect.
 
+#### Google OAuth Setup
+
+Google login requires credentials from Google Cloud Console and configuration in Supabase.
+
+**1. Create Google OAuth credentials:**
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/).
+2. Create a project (or select an existing one).
+3. Navigate to **APIs & Services → OAuth consent screen** and configure it:
+   - User type: **External**
+   - App name, support email, developer contact email
+   - Scopes: `email`, `profile`, `openid`
+4. Navigate to **APIs & Services → Credentials → Create Credentials → OAuth client ID**.
+5. Application type: **Web application**.
+6. **Authorized JavaScript origins:**
+   ```
+   http://localhost:3000
+   https://<your-vercel-domain>.vercel.app
+   ```
+7. **Authorized redirect URI:**
+   ```
+   https://<your-supabase-project>.supabase.co/auth/v1/callback
+   ```
+8. Copy the **Client ID** and **Client Secret**.
+
+**2. Configure Supabase:**
+
+1. Go to **Supabase Dashboard → Authentication → Providers → Google**.
+2. Enable **Sign in with Google**.
+3. Paste the **Client ID** and **Client Secret** from Google.
+4. Save.
+
+**3. Configure Supabase redirect URLs:**
+
+1. Go to **Supabase Dashboard → Authentication → URL Configuration**.
+2. Set **Site URL** to your production frontend URL (e.g. `https://finance-kite.vercel.app`).
+3. Add both URLs to **Redirect URLs**:
+   ```
+   http://localhost:3000/callback
+   https://<your-vercel-domain>.vercel.app/callback
+   ```
+
+**Important notes:**
+- The app is initially in **Testing** mode — only manually added test users can sign in. Add test users under **APIs & Services → OAuth consent screen → Test users** in Google Cloud Console.
+- To allow any Google account, click **Publish App** on the consent screen. Google may require verification for sensitive scopes.
+- The **Site URL** in Supabase controls the default redirect destination. Set it to your production URL — local development still works because the code dynamically uses `window.location.origin`.
+- The OAuth callback route lives at `/callback` (not `/auth/callback`) due to Next.js route groups — the `(auth)` folder is invisible in the URL.
+
 ---
 
 ## Getting Started (Local Setup)
@@ -290,6 +338,8 @@ dotnet run
 # → Swagger UI at http://localhost:5224/swagger
 ```
 
+> **Where do I find these values?** Connection string and keys are in your Supabase project dashboard under **Settings → API** and **Settings → Database**. The Resend API key is in the [Resend dashboard](https://resend.com). Secrets are stored via .NET User Secrets (outside the repo, in your OS user profile) — they never touch source control.
+
 ### 3. Set up the frontend
 
 ```bash
@@ -313,7 +363,7 @@ npm run dev
 ### 4. Verify
 
 1. Open `http://localhost:3000` — you should see the landing page.
-2. Sign up with email or Google OAuth.
+2. Sign up with email or Google OAuth (requires [Google OAuth setup](#google-oauth-setup) above).
 3. Create a business and start adding clients, invoices, and expenses.
 
 ---
