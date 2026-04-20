@@ -17,6 +17,21 @@ public class ExceptionHandlingMiddleware(
         {
             await next(context);
         }
+        catch (ValidationException ex)
+        {
+            logger.LogInformation("Validation failed: {Message}", ex.Message);
+            await HandleExceptionAsync(context, ex);
+        }
+        catch (NotFoundException ex)
+        {
+            logger.LogInformation("Resource not found: {Message}", ex.Message);
+            await HandleExceptionAsync(context, ex);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            logger.LogInformation("Unauthorized access: {Message}", ex.Message);
+            await HandleExceptionAsync(context, ex);
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "An unhandled exception occurred: {Message}", ex.Message);

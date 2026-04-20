@@ -25,6 +25,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
+import { extractErrorMessage } from '@/lib/utils'
 
 // ── constants ─────────────────────────────────────────────────────────────────
 
@@ -310,7 +311,7 @@ export default function InvoicesPage() {
       }
       closeDialog()
     } catch (err) {
-      console.error(err)
+      toast.error(extractErrorMessage(err, 'Could not save invoice. Please try again.'))
     } finally {
       setSaving(false)
     }
@@ -323,7 +324,7 @@ export default function InvoicesPage() {
       await invoicesApi.delete(selectedBusiness.id, inv.id)
       setInvoices((prev) => prev.filter((i) => i.id !== inv.id))
     } catch (err) {
-      console.error(err)
+      toast.error(extractErrorMessage(err, 'Could not delete invoice. Please try again.'))
     }
   }
 

@@ -215,19 +215,26 @@ curl http://localhost:10000/health
 
 | Variable | Description |
 |---|---|
-| `ConnectionStrings__DefaultConnection` | PostgreSQL connection string |
+| `ConnectionStrings__DefaultConnection` | PostgreSQL connection string in **Npgsql keyword format** (see below) |
 | `Supabase__Url` | Supabase project URL |
-| `Supabase__ServiceRoleKey` | Supabase service role key (backend only) |
-| `Supabase__JwtSecret` | Supabase JWT signing secret |
+| `Supabase__ServiceRoleKey` | Supabase **secret API key** (`sb_secret_...`) — never expose to the frontend |
 | `Resend__ApiKey` | Resend API key for transactional emails |
-| `Cors__AllowedOrigins__0` | Production frontend URL (e.g. `https://finance-kite.vercel.app`) |
+| `Cors__AllowedOrigins__0` | Production frontend URL **with scheme** (e.g. `https://finance-kite.vercel.app`) |
+
+JWT validation uses Supabase's JWKS endpoint (`/.well-known/openid-configuration`), so no shared `JwtSecret` env var is required.
+
+The connection string must use Npgsql keyword format, not the `postgresql://` URI Supabase shows by default:
+
+```
+Host=aws-1-<region>.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.<project-ref>;Password=<db-password>;SSL Mode=Require;Trust Server Certificate=true
+```
 
 #### Frontend (set in Vercel dashboard or `.env.local`)
 
 | Variable | Description |
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key (safe for client-side) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase **publishable API key** (`sb_publishable_...`) — safe for client-side |
 | `NEXT_PUBLIC_API_URL` | Backend API base URL (e.g. `https://financekite-backend.onrender.com`) |
 
 ### Deployment
@@ -326,11 +333,11 @@ cd FinanceKite
 cd backend/src/FinanceKite.API
 
 # Configure secrets (stored outside the repo in your user profile)
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<your-supabase-postgres-connection-string>"
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=aws-1-<region>.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.<project-ref>;Password=<db-password>;SSL Mode=Require;Trust Server Certificate=true"
 dotnet user-secrets set "Supabase:Url" "https://<your-project>.supabase.co"
-dotnet user-secrets set "Supabase:ServiceRoleKey" "<your-service-role-key>"
-dotnet user-secrets set "Supabase:JwtSecret" "<your-jwt-secret>"
-dotnet user-secrets set "Resend:ApiKey" "<your-resend-api-key>"
+dotnet user-secrets set "Supabase:ServiceRoleKey" "sb_secret_<your-secret-key>"
+dotnet user-secrets set "Supabase:StorageBucket" "financekite-files"
+dotnet user-secrets set "Resend:ApiKey" "re_<your-resend-api-key>"
 
 # Apply database migrations
 dotnet ef database update
@@ -341,7 +348,13 @@ dotnet run
 # → Swagger UI at http://localhost:5224/swagger
 ```
 
-> **Where do I find these values?** Connection string and keys are in your Supabase project dashboard under **Settings → API** and **Settings → Database**. The Resend API key is in the [Resend dashboard](https://resend.com). Secrets are stored via .NET User Secrets (outside the repo, in your OS user profile) — they never touch source control.
+> **Where do I find these values?**
+> - **Supabase API keys** — Project Settings → **API Keys** → **Publishable and secret API keys** tab. Copy the `default` publishable key for the frontend, and create/use a secret key for the backend. (The older `anon` / `service_role` JWT keys under the **Legacy** tab are deprecated — prefer the new `sb_publishable_*` / `sb_secret_*` format.)
+> - **Connection string** — Project Settings → **Database** → **Connection string** → select the **Transaction pooler** tab for the host/port values, then reformat into the Npgsql keyword syntax shown above. Use **Reset database password** to generate a password if you don't have one.
+> - **Supabase URL** — Project Settings → **Data API**.
+> - **Resend API key** — [Resend dashboard](https://resend.com/api-keys).
+>
+> Secrets are stored via .NET User Secrets (outside the repo, in your OS user profile) — they never touch source control.
 
 ### 3. Set up the frontend
 
@@ -355,7 +368,7 @@ npm install
 cp .env.local.example .env.local
 # Then edit .env.local with your values:
 #   NEXT_PUBLIC_SUPABASE_URL=https://<your-project>.supabase.co
-#   NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_<your-publishable-key>
 #   NEXT_PUBLIC_API_URL=http://localhost:5224
 
 # Start the dev server
